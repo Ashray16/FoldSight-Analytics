@@ -4,6 +4,7 @@ import {
   Chart as ChartJS, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend, Filler
 } from 'chart.js';
 import { Bar, Line } from 'react-chartjs-2';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import './index.css';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend, Filler);
@@ -292,7 +293,9 @@ export default function App() {
   };
 
   return (
-    <div className="dashboard-container">
+    <>
+      <SpeedInsights />
+      <div className="dashboard-container">
       {/* Sidebar Navigation */}
       <div className="sidebar">
         <div className="brand">
@@ -444,5 +447,6 @@ export default function App() {
         )}
       </div>
     </div>
+    </>
   );
 }
