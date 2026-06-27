@@ -154,7 +154,7 @@ export default function App() {
         ? { uniprot_id: valToUse, window_size: parseInt(windowSize) } 
         : { sequence: valToUse, window_size: parseInt(windowSize) };
         
-      const res = await axios.post('http://localhost:8000/api/analyze', payload);
+      const res = await axios.post("https://fold-sight-analytics-8vs1.vercel.app/api/analyze", payload);
       setResults(res.data);
       setHydroData(res.data.hydrophobicity_plot);
       addToHistory(typeToUse, valToUse);
@@ -172,7 +172,7 @@ export default function App() {
   // Real-time silent refetch for hydrophobicity slider
   useEffect(() => {
     if (results && results.sequence) {
-      axios.post('http://localhost:8000/api/hydrophobicity', {
+      axios.post("https://fold-sight-analytics-8vs1.vercel.app/api/hydrophobicity", {
         sequence: results.sequence,
         window_size: parseInt(windowSize)
       }).then(res => {
