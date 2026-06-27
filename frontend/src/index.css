@@ -299,3 +299,45 @@ input[type=range] {
   grid-column: span 2;
   height: 350px;
 }
+
+/* Responsive Design / Mobile Optimization */
+@media (max-width: 768px) {
+  body {
+    overflow: auto;
+  }
+  
+  .dashboard-container {
+    flex-direction: column;
+    height: auto;
+  }
+  
+  .sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--border-color);
+    padding: 1.5rem 1rem;
+    overflow-y: visible;
+  }
+  
+  .main-content {
+    padding: 1.5rem 1rem;
+    overflow-y: visible;
+  }
+  
+  .top-bar {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .grid-layout {
+    grid-template-columns: 1fr;
+  }
+  
+  .card-small, .viewer-card, .chart-card {
+    grid-column: span 1 !important;
+  }
+  
+  .viewer-card {
+    height: 450px;
+  }
+}
