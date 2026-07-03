@@ -1,31 +1,47 @@
-from fastapi import FastAPI, HTTPException
+import os
+from dotenv import load_dotenv
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
 from Bio.SeqUtils.ProtParam import ProteinAnalysis
 import requests
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+
+load_dotenv()
 
 app = FastAPI()
 
+# Rate limiting
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+allowed_origins_env = os.environ.get("ALLOWED_ORIGINS")
+allowed_origins = allowed_origins_env.split(",") if allowed_origins_env else ["http://localhost:5173"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 class AnalyzeRequest(BaseModel):
-    sequence: Optional[str] = None
-    uniprot_id: Optional[str] = None
-    window_size: Optional[int] = 9
+    sequence: Optional[str] = Field(None, max_length=10000, description="Raw amino acid sequence")
+    uniprot_id: Optional[str] = Field(None, pattern=r"^[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2}$|^[O,P,Q][0-9][A-Z0-9]{3}[0-9]$", description="UniProt Accession ID")
+    window_size: Optional[int] = Field(9, ge=3, le=41)
 
 class HydroRequest(BaseModel):
-    sequence: str
-    window_size: int = 9
+    sequence: str = Field(..., max_length=10000)
+    window_size: int = Field(9, ge=3, le=41)
 
 @app.post("/api/hydrophobicity")
-def calculate_hydrophobicity(req: HydroRequest):
+@limiter.limit("5/minute")
+def calculate_hydrophobicity(request: Request, req: HydroRequest):
     if not req.sequence:
         raise HTTPException(status_code=400, detail="Empty sequence")
     return {"hydrophobicity_plot": get_hydrophobicity_plot(req.sequence, req.window_size)}
@@ -166,7 +182,8 @@ def analyze_pae(pae_data):
     }
 
 @app.post("/api/analyze")
-def analyze_protein(req: AnalyzeRequest):
+@limiter.limit("5/minute")
+def analyze_protein(request: Request, req: AnalyzeRequest):
     sequence = ""
     uniprot_id = req.uniprot_id
     afdb_data = None
