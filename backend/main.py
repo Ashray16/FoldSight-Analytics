@@ -190,12 +190,20 @@ def analyze_protein(request: Request, req: AnalyzeRequest):
     pae_data_result = None
     plddt_result = None
     cif_url = None
+    protein_name = None
 
     if req.uniprot_id:
         uniprot_id = req.uniprot_id.strip().upper()
         fasta_resp = requests.get(f"https://rest.uniprot.org/uniprotkb/{uniprot_id}.fasta")
         if fasta_resp.status_code == 200:
             lines = fasta_resp.text.split("\n")
+            header = lines[0]
+            parts = header.split(" OS=")
+            if len(parts) > 1:
+                protein_name = parts[0].split(" ", 1)[1] if " " in parts[0] else "Unknown Protein"
+            else:
+                protein_name = "Unknown Protein"
+                
             sequence = "".join(lines[1:]).replace("\n", "").replace("\r", "").upper()
             
             afdb_resp = requests.get(f"https://alphafold.ebi.ac.uk/api/prediction/{uniprot_id}")
@@ -240,6 +248,7 @@ def analyze_protein(request: Request, req: AnalyzeRequest):
     return {
         "sequence": sequence,
         "uniprot_id": uniprot_id,
+        "protein_name": protein_name,
         "cif_url": cif_url,
         "properties": {
             "molecular_weight": molecular_weight,

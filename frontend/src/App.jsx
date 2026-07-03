@@ -378,8 +378,10 @@ export default function App() {
       <div className="main-content">
         <div className="top-bar">
           <div>
-            <h1 className="page-title">Protein Dashboard</h1>
-            <div style={{color: 'var(--text-secondary)', fontSize: '0.9rem'}}>At a glance summary of your selected protein.</div>
+            <h1 className="page-title">{results?.protein_name ? results.protein_name : 'Protein Dashboard'}</h1>
+            <div style={{color: 'var(--text-secondary)', fontSize: '0.9rem'}}>
+               {results?.uniprot_id ? `UniProt ID: ${results.uniprot_id}` : 'At a glance summary of your selected protein.'}
+            </div>
           </div>
           <button className="btn-secondary" onClick={exportCSV} disabled={!results}>Export Report to CSV</button>
         </div>
