@@ -365,10 +365,10 @@ export default function App() {
         {/* Developer Section */}
         <div className="sidebar-section dev-portfolio">
           <div className="sidebar-title" style={{color: 'var(--text-primary)'}}>Developer Portfolio</div>
-          <a href="https://github.com/developer" target="_blank" rel="noreferrer" className="dev-link">
+          <a href="https://github.com/Ashray16" target="_blank" rel="noreferrer" className="dev-link">
             <span>👾</span> GitHub Profile
           </a>
-          <a href="https://linkedin.com/in/developer" target="_blank" rel="noreferrer" className="dev-link">
+          <a href="https://linkedin.com/in/ashray-gupta-81312b2aa" target="_blank" rel="noreferrer" className="dev-link">
             <span>💼</span> LinkedIn Profile
           </a>
         </div>
