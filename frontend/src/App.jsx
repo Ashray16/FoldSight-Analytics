@@ -71,11 +71,11 @@ const Viewer3D = ({ cifUrl, sequence, styleMode }) => {
   }, [cifUrl, sequence]);
 
   useEffect(() => {
-    if (viewerInstance && cifUrl) {
+    if (viewerInstance) {
       applyStyle(viewerInstance, styleMode);
       viewerInstance.render();
     }
-  }, [styleMode, viewerInstance, cifUrl]);
+  }, [styleMode, viewerInstance]);
 
   return (
     <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
