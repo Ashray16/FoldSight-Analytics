@@ -8,6 +8,16 @@ import './index.css';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend, Filler);
 
+const extractErrorMessage = (err) => {
+  if (err.response && err.response.data) {
+    if (typeof err.response.data.detail === 'string') return err.response.data.detail;
+    if (Array.isArray(err.response.data.detail)) return JSON.stringify(err.response.data.detail);
+    if (typeof err.response.data === 'string' && err.response.data.includes('<html')) return 'API Endpoint not found or Server Error.';
+    return JSON.stringify(err.response.data);
+  }
+  return err.message || 'An error occurred during analysis';
+};
+
 const Logo = () => (
   <img src="/logo.png" alt="FoldSight Logo" style={{ width: '24px', height: '24px', objectFit: 'contain' }} />
 );
@@ -161,13 +171,13 @@ const CompareModal = ({ onClose, currentResults }) => {
     setLoading(true);
     setError('');
     try {
-      const res = await axios.post("https://fold-sight-analytics.vercel.app/api/analyze", { 
+      const res = await axios.post("/api/analyze", { 
         uniprot_id: compareId, 
         window_size: 9 
       });
       setCompareResults(res.data);
     } catch (err) {
-      setError(err.response?.data?.detail || 'An error occurred during comparison');
+      setError(extractErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -334,7 +344,7 @@ export default function App() {
         ? { uniprot_id: valToUse, window_size: parseInt(windowSize) } 
         : { sequence: valToUse, window_size: parseInt(windowSize) };
         
-      const res = await axios.post("https://fold-sight-analytics.vercel.app/api/analyze", payload);
+      const res = await axios.post("/api/analyze", payload);
       setResults(res.data);
       setHydroData(res.data.hydrophobicity_plot);
       addToHistory(typeToUse, valToUse);
@@ -351,7 +361,7 @@ export default function App() {
       setActiveTab('molecular');
       setSelectedDomain(null);
     } catch (err) {
-      setError(err.response?.data?.detail || 'An error occurred during analysis');
+      setError(extractErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -360,7 +370,7 @@ export default function App() {
   // Real-time silent refetch for hydrophobicity slider
   useEffect(() => {
     if (results && results.sequence) {
-      axios.post("https://fold-sight-analytics.vercel.app/api/hydrophobicity", {
+      axios.post("/api/hydrophobicity", {
         sequence: results.sequence,
         window_size: parseInt(windowSize)
       }).then(res => {
