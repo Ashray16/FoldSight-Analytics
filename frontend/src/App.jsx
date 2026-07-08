@@ -176,7 +176,10 @@ export default function App() {
       const res = await axios.get(`https://rest.uniprot.org/uniprotkb/${uniprotId}.json`);
       const funcComment = res.data.comments?.find(c => c.commentType === 'FUNCTION');
       if (funcComment && funcComment.texts && funcComment.texts.length > 0) {
-        setProteinFunction(funcComment.texts[0].value);
+        let rawText = funcComment.texts[0].value;
+        // Strip out ugly (PubMed:1234, ...) citations
+        let cleanText = rawText.replace(/\s*\([^)]*PubMed[^)]*\)/g, '');
+        setProteinFunction(cleanText);
       } else {
         setProteinFunction('No functional description available in UniProt for this protein.');
       }
