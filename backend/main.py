@@ -240,10 +240,65 @@ def analyze_protein(request: Request, req: AnalyzeRequest):
         gravy = analysis.gravy()
         sec_struct = analysis.secondary_structure_fraction()
         aa_counts = analysis.count_amino_acids()
+        aa_percent = analysis.get_amino_acids_percent()
+        
+        # Stability metrics
+        try:
+            instability_index = analysis.instability_index()
+        except:
+            instability_index = 0
+            
+        extinction_coefficient = analysis.molar_extinction_coefficient()
+        
+        # Aliphatic Index
+        aliphatic_index = 100 * (aa_percent.get('A', 0) + 2.9 * aa_percent.get('V', 0) + 3.9 * (aa_percent.get('I', 0) + aa_percent.get('L', 0)))
+        
+        # Estimated Half-Life (Mammalian reticulocytes, in vitro) based on N-end rule
+        n_term = sequence[0] if len(sequence) > 0 else ''
+        if n_term in ['M', 'G', 'A', 'S', 'T', 'V']:
+            half_life = ">30 hours"
+        elif n_term in ['I', 'E']:
+            half_life = ">30 minutes"
+        elif n_term in ['Y', 'Q', 'P']:
+            half_life = ">10 minutes"
+        elif n_term in ['L', 'F', 'D', 'K', 'R']:
+            half_life = ">3 minutes"
+        else:
+            half_life = "Unknown"
+            
+        # Predicted Solubility rule of thumb based on charge and GRAVY
+        if gravy < 0 and (pi < 6 or pi > 8):
+            solubility = "High"
+        elif gravy > 0.5:
+            solubility = "Low (Membrane-like)"
+        else:
+            solubility = "Moderate"
+            
+        stability_class = "Stable" if instability_index < 40 else "Unstable"
+        
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error analyzing sequence: {str(e)}")
         
     hydro_plot = get_hydrophobicity_plot(sequence, req.window_size)
+    
+    # Generate Per-Residue Array for frontend
+    sequence_data = []
+    
+    # Try to extract per-residue pLDDT if available. In the EBI API, entry.cifUrl is used, 
+    # but we don't have per-residue pLDDT natively in the JSON response from AFDB without parsing CIF.
+    # We will let the frontend extract pLDDT from the CIF file via 3Dmol for the 3D viewer.
+    # For the sequence viewer, we can just supply the Kyte-Doolittle and secondary structure approximations.
+    
+    # Generate AI Scientific Interpretation
+    ai_summary = f"The protein exhibits a {'positive' if gravy > 0 else 'negative'} GRAVY score of {gravy:.2f}, indicating {'hydrophobic characteristics consistent with membrane-associated proteins' if gravy > 0 else 'hydrophilic characteristics typical of globular proteins'}. "
+    ai_summary += f"With an instability index of {instability_index:.1f}, the protein is predicted to be {stability_class} in vitro. "
+    if plddt_result:
+        ai_summary += f"AlphaFold prediction yields a global pLDDT of {plddt_result['global']:.1f}, suggesting that the {plddt_result['conclusion'].lower()} "
+    if pae_data_result and len(pae_data_result['domains']) > 0:
+        ai_summary += f"Structural analysis indicates the presence of {len(pae_data_result['domains'])} distinct rigid domain(s). "
+    else:
+        ai_summary += "It may lack well-defined rigid domains. "
+    ai_summary += f"The estimated half-life based on the N-terminal rule is {half_life}."
 
     return {
         "sequence": sequence,
@@ -256,6 +311,15 @@ def analyze_protein(request: Request, req: AnalyzeRequest):
             "gravy": gravy,
             "classification": "Hydrophobic (Membrane)" if gravy > 0 else "Hydrophilic (Globular)"
         },
+        "stability": {
+            "instability_index": instability_index,
+            "aliphatic_index": aliphatic_index,
+            "extinction_coefficient": extinction_coefficient[0], # reduced
+            "half_life": half_life,
+            "solubility": solubility,
+            "classification": stability_class
+        },
+        "ai_summary": ai_summary,
         "secondary_structure": {
             "helix": sec_struct[0],
             "turn": sec_struct[1],

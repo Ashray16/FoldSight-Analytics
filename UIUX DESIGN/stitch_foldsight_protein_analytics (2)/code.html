@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>History &amp; Parameters - FoldSight Analytics</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-primary": "#283044",
+                      "on-error-container": "#ffdad6",
+                      "secondary-fixed-dim": "#7bd0ff",
+                      "surface-variant": "#26364a",
+                      "surface-bright": "#2a3a4f",
+                      "on-secondary-container": "#00374d",
+                      "primary-fixed-dim": "#bec6e0",
+                      "secondary": "#7bd0ff",
+                      "inverse-on-surface": "#213145",
+                      "on-surface-variant": "#c6c6cd",
+                      "on-primary-container": "#798098",
+                      "tertiary-fixed-dim": "#4edea3",
+                      "error": "#ffb4ab",
+                      "secondary-container": "#00a6e0",
+                      "error-container": "#93000a",
+                      "background": "#031427",
+                      "on-primary-fixed": "#131b2e",
+                      "on-tertiary-container": "#009365",
+                      "tertiary-fixed": "#6ffbbe",
+                      "on-error": "#690005",
+                      "surface-container-high": "#1b2b3f",
+                      "outline": "#909097",
+                      "on-secondary-fixed": "#001e2c",
+                      "surface-container-lowest": "#000f21",
+                      "on-surface": "#d3e4fe",
+                      "surface-container-low": "#0b1c30",
+                      "outline-variant": "#45464d",
+                      "surface-dim": "#031427",
+                      "on-tertiary": "#003824",
+                      "on-background": "#d3e4fe",
+                      "primary-container": "#0f172a",
+                      "on-tertiary-fixed-variant": "#005236",
+                      "on-secondary": "#00354a",
+                      "surface": "#031427",
+                      "inverse-surface": "#d3e4fe",
+                      "on-primary-fixed-variant": "#3f465c",
+                      "surface-tint": "#bec6e0",
+                      "primary": "#bec6e0",
+                      "tertiary-container": "#001c10",
+                      "primary-fixed": "#dae2fd",
+                      "inverse-primary": "#565e74",
+                      "on-tertiary-fixed": "#002113",
+                      "surface-container": "#102034",
+                      "tertiary": "#4edea3",
+                      "on-secondary-fixed-variant": "#004c69",
+                      "surface-container-highest": "#26364a",
+                      "secondary-fixed": "#c4e7ff"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "margin": "24px",
+                      "gutter": "16px",
+                      "unit": "4px",
+                      "panel-padding": "20px",
+                      "container-max-width": "1600px"
+              },
+              "fontFamily": {
+                      "label-caps": ["Inter"],
+                      "mono-code": ["JetBrains Mono"],
+                      "headline-md": ["Geist"],
+                      "headline-lg": ["Geist"],
+                      "body-md": ["Inter"],
+                      "body-lg": ["Inter"],
+                      "body-sm": ["Inter"],
+                      "headline-sm": ["Geist"]
+              },
+              "fontSize": {
+                      "label-caps": ["11px", {"lineHeight": "1", "letterSpacing": "0.1em", "fontWeight": "700"}],
+                      "mono-code": ["13px", {"lineHeight": "1.6", "letterSpacing": "0.05em", "fontWeight": "450"}],
+                      "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                      "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                      "body-md": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                      "body-lg": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                      "body-sm": ["12px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                      "headline-sm": ["18px", {"lineHeight": "1.4", "fontWeight": "500"}]
+              }
+            }
+          }
+        }
+    </script>
+<style>
+        .glass-panel {
+            background-color: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .zebra-row:nth-child(even) {
+            background-color: rgba(255, 255, 255, 0.03);
+        }
+
+        /* Custom Range Slider */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            background: #bec6e0;
+            cursor: pointer;
+            margin-top: -6px;
+            box-shadow: 0 0 10px rgba(190, 198, 224, 0.5);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: rgba(255,255,255,0.1);
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background flex h-screen overflow-hidden antialiased">
+<!-- SideNavBar (Shared Component) -->
+<aside class="fixed left-0 top-0 h-full w-[280px] bg-surface-container/80 backdrop-blur-md dark:bg-surface-container/80 border-r border-white/10 shadow-2xl flex flex-col h-screen overflow-y-auto z-40 md:flex hidden">
+<div class="px-margin py-6 border-b border-white/5">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-on-primary font-bold">FS</div>
+<div>
+<h1 class="text-headline-sm font-headline-sm font-black text-primary">FoldSight</h1>
+<p class="text-label-caps font-label-caps text-on-surface-variant mt-1">v1.2.0-stable</p>
+</div>
+</div>
+<button class="mt-6 w-full py-2.5 px-4 bg-gradient-to-r from-surface-variant to-primary-container border border-white/10 text-white text-body-sm font-body-sm rounded-lg hover:border-primary/50 transition-colors shadow-sm flex items-center justify-center gap-2">
+<span class="material-symbols-outlined" style="font-size: 18px;">add</span>
+                Run New Analysis
+            </button>
+</div>
+<nav class="flex-1 py-4 flex flex-col gap-1 px-3">
+<!-- Inactive -->
+<a class="text-on-surface-variant flex items-center px-4 py-3 opacity-80 hover:bg-white/5 hover:opacity-100 transition-all rounded-lg group" href="#">
+<span class="material-symbols-outlined mr-3 text-on-surface-variant group-hover:text-secondary transition-colors" data-icon="analytics">analytics</span>
+<span class="text-label-caps font-label-caps">Molecular Analysis</span>
+</a>
+<!-- Inactive -->
+<a class="text-on-surface-variant flex items-center px-4 py-3 opacity-80 hover:bg-white/5 hover:opacity-100 transition-all rounded-lg group" href="#">
+<span class="material-symbols-outlined mr-3 text-on-surface-variant group-hover:text-secondary transition-colors" data-icon="dna">dns</span>
+<span class="text-label-caps font-label-caps">Sequence Viewer</span>
+</a>
+<!-- Inactive -->
+<a class="text-on-surface-variant flex items-center px-4 py-3 opacity-80 hover:bg-white/5 hover:opacity-100 transition-all rounded-lg group" href="#">
+<span class="material-symbols-outlined mr-3 text-on-surface-variant group-hover:text-secondary transition-colors" data-icon="tune">tune</span>
+<span class="text-label-caps font-label-caps">Parameter Config</span>
+</a>
+<!-- Active -->
+<a class="bg-secondary-container/20 text-secondary border-l-4 border-secondary flex items-center px-4 py-3 rounded-r-lg group scale-95 transition-transform translate-x-1 duration-150" href="#">
+<span class="material-symbols-outlined mr-3 text-secondary" data-icon="history" style="font-variation-settings: 'FILL' 1;">history</span>
+<span class="text-label-caps font-label-caps text-secondary font-bold">Search History</span>
+</a>
+</nav>
+<div class="p-4 border-t border-white/5">
+<a class="text-on-surface-variant flex items-center px-4 py-2 opacity-80 hover:bg-white/5 hover:opacity-100 transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined mr-3 text-[18px]" data-icon="settings">settings</span>
+<span class="text-body-sm font-body-sm">Settings</span>
+</a>
+<a class="text-on-surface-variant flex items-center px-4 py-2 opacity-80 hover:bg-white/5 hover:opacity-100 transition-all rounded-lg mt-1" href="#">
+<span class="material-symbols-outlined mr-3 text-[18px]" data-icon="menu_book">menu_book</span>
+<span class="text-body-sm font-body-sm">Documentation</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col min-w-0 md:ml-[280px] bg-background relative overflow-y-auto">
+<!-- TopAppBar (Shared Component) -->
+<header class="bg-surface/70 backdrop-blur-xl dark:bg-surface/70 w-full px-margin h-16 sticky top-0 z-30 shadow-sm border-b border-white/10 flex justify-between items-center">
+<div class="flex items-center gap-4">
+<!-- Mobile Menu Trigger -->
+<button class="md:hidden text-on-surface-variant">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<h2 class="text-headline-sm font-headline-sm font-bold tracking-tight text-primary">FoldSight Analytics</h2>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-on-surface-variant font-medium text-body-sm font-body-sm hover:text-secondary transition-colors duration-200 flex items-center gap-2 px-3 py-1.5 rounded-md hover:bg-white/5">
+<span class="material-symbols-outlined text-[18px]">download</span>
+                    Export CSV
+                </button>
+<div class="w-px h-5 bg-white/10 mx-2"></div>
+<button class="flex items-center gap-2 text-body-sm font-body-sm text-on-surface hover:text-primary transition-colors">
+<div class="w-7 h-7 rounded-full bg-surface-container-high border border-white/10 flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A macro photography shot of abstract, glowing neon fluid dynamics in deep space, representing a developer profile avatar, lit with cybernetic blue and cyan rim lights, high contrast, sleek and mysterious." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBbOQd8beQKSw_tTrHqb9VzYAAATakhl4EZlTCKXeJSBGsKnWwN5Z1zyYUIVnOfd00FA58kItvpFgxKULDfLGQ5rqEvkVQygwJK0DMfdXLzVrBeZh02tHXjfNVMS8glim02AwZF9osJIHTDtD--Qm1xfP1B7jJPrKP-qzPsRM6VrxRptB7wguwR423KB0XcEfkjNBNsiN1yL78upBq-PLIBVI-ed2Bj_XE7oI0LMECMD66TqaifoH6v"/>
+</div>
+<span>Developer Profile</span>
+</button>
+</div>
+</header>
+<!-- Canvas -->
+<div class="flex-1 p-margin max-w-container-max-width mx-auto w-full">
+<div class="mb-8">
+<h3 class="text-headline-md font-headline-md text-on-background">History &amp; Parameters</h3>
+<p class="text-body-md font-body-md text-on-surface-variant mt-1">Review past molecular analyses and configure global processing parameters.</p>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-gutter">
+<!-- Left Column: Parameters & API (5 columns) -->
+<div class="xl:col-span-4 flex flex-col gap-gutter">
+<!-- Configuration Panel -->
+<div class="glass-panel rounded-xl p-panel-padding">
+<div class="flex items-center gap-2 mb-6 border-b border-white/10 pb-4">
+<span class="material-symbols-outlined text-primary">tune</span>
+<h4 class="text-headline-sm font-headline-sm text-on-surface">Configuration Panel</h4>
+</div>
+<div class="space-y-6">
+<!-- Slider 1 -->
+<div>
+<div class="flex justify-between items-end mb-2">
+<label class="text-label-caps font-label-caps text-on-surface-variant">Hydrophobicity Window Size</label>
+<span class="text-mono-code font-mono-code text-secondary">21 aa</span>
+</div>
+<input max="50" min="1" type="range" value="21"/>
+<div class="flex justify-between mt-1 text-[10px] text-outline">
+<span>Narrow (1)</span>
+<span>Wide (50)</span>
+</div>
+</div>
+<!-- Slider 2 -->
+<div>
+<div class="flex justify-between items-end mb-2">
+<label class="text-label-caps font-label-caps text-on-surface-variant">Smoothing Factor</label>
+<span class="text-mono-code font-mono-code text-secondary">0.85</span>
+</div>
+<input max="100" min="0" type="range" value="85"/>
+<div class="flex justify-between mt-1 text-[10px] text-outline">
+<span>Raw (0.0)</span>
+<span>Smooth (1.0)</span>
+</div>
+</div>
+<!-- Slider 3 -->
+<div>
+<div class="flex justify-between items-end mb-2">
+<label class="text-label-caps font-label-caps text-on-surface-variant">Rendering Quality</label>
+<span class="text-mono-code font-mono-code text-tertiary">High</span>
+</div>
+<input max="3" min="1" step="1" type="range" value="3"/>
+<div class="flex justify-between mt-1 text-[10px] text-outline">
+<span>Low</span>
+<span>Med</span>
+<span>High</span>
+</div>
+</div>
+</div>
+</div>
+<!-- API Settings -->
+<div class="glass-panel rounded-xl p-panel-padding">
+<div class="flex items-center gap-2 mb-6 border-b border-white/10 pb-4">
+<span class="material-symbols-outlined text-primary">key</span>
+<h4 class="text-headline-sm font-headline-sm text-on-surface">API Settings</h4>
+</div>
+<div class="space-y-4">
+<div>
+<label class="text-label-caps font-label-caps text-on-surface-variant block mb-2">UniProt API Endpoint</label>
+<div class="relative">
+<input class="w-full bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-mono-code font-mono-code text-on-surface focus:outline-none focus:border-secondary transition-colors" readonly="" type="text" value="https://rest.uniprot.org/uniprotkb/"/>
+<span class="absolute right-3 top-2.5 material-symbols-outlined text-outline text-[18px]">lock</span>
+</div>
+</div>
+<div>
+<label class="text-label-caps font-label-caps text-on-surface-variant block mb-2">AlphaFold Auth Token</label>
+<div class="flex gap-2">
+<input class="flex-1 bg-surface-container-lowest border border-white/10 rounded-lg px-3 py-2 text-mono-code font-mono-code text-on-surface focus:outline-none focus:border-secondary transition-colors" readonly="" type="password" value="************************"/>
+<button class="bg-surface-variant border border-white/10 px-3 rounded-lg hover:bg-white/10 transition-colors text-on-surface flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px]">edit</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: History Data (8 columns) -->
+<div class="xl:col-span-8 flex flex-col gap-gutter">
+<!-- Recent Searches List -->
+<div class="glass-panel rounded-xl p-panel-padding flex-1 flex flex-col">
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">manage_search</span>
+<h4 class="text-headline-sm font-headline-sm text-on-surface">Recent Searches</h4>
+</div>
+<button class="text-label-caps font-label-caps text-secondary hover:text-primary transition-colors flex items-center gap-1">
+                                View All <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+</button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b border-white/10 text-label-caps font-label-caps text-on-surface-variant">
+<th class="py-3 px-2 font-normal">Protein Name</th>
+<th class="py-3 px-2 font-normal">Accession ID</th>
+<th class="py-3 px-2 font-normal">Date Run</th>
+<th class="py-3 px-2 font-normal">GRAVY Score</th>
+<th class="py-3 px-2 font-normal text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="text-body-sm font-body-sm text-on-surface">
+<!-- Row 1 -->
+<tr class="zebra-row border-b border-white/5 hover:bg-white/5 transition-colors group">
+<td class="py-3 px-2 font-medium">Cytochrome c</td>
+<td class="py-3 px-2"><span class="text-mono-code font-mono-code text-primary/80">P99999</span></td>
+<td class="py-3 px-2 text-on-surface-variant">Oct 24, 14:32</td>
+<td class="py-3 px-2">
+<span class="px-2 py-0.5 rounded-full bg-secondary/10 text-secondary border border-secondary/20 text-mono-code font-mono-code">-0.48</span>
+</td>
+<td class="py-3 px-2">
+<div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-1.5 rounded bg-surface-variant hover:bg-secondary/20 hover:text-secondary text-on-surface transition-colors tooltip-trigger" title="Re-run">
+<span class="material-symbols-outlined text-[16px]">replay</span>
+</button>
+<button class="p-1.5 rounded bg-surface-variant hover:bg-error/20 hover:text-error text-on-surface transition-colors tooltip-trigger" title="Delete">
+<span class="material-symbols-outlined text-[16px]">delete</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="zebra-row border-b border-white/5 hover:bg-white/5 transition-colors group">
+<td class="py-3 px-2 font-medium">Hemoglobin subunit alpha</td>
+<td class="py-3 px-2"><span class="text-mono-code font-mono-code text-primary/80">P69905</span></td>
+<td class="py-3 px-2 text-on-surface-variant">Oct 23, 09:15</td>
+<td class="py-3 px-2">
+<span class="px-2 py-0.5 rounded-full bg-tertiary/10 text-tertiary border border-tertiary/20 text-mono-code font-mono-code">0.12</span>
+</td>
+<td class="py-3 px-2">
+<div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-1.5 rounded bg-surface-variant hover:bg-secondary/20 hover:text-secondary text-on-surface transition-colors tooltip-trigger">
+<span class="material-symbols-outlined text-[16px]">replay</span>
+</button>
+<button class="p-1.5 rounded bg-surface-variant hover:bg-error/20 hover:text-error text-on-surface transition-colors tooltip-trigger">
+<span class="material-symbols-outlined text-[16px]">delete</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="zebra-row border-b border-white/5 hover:bg-white/5 transition-colors group">
+<td class="py-3 px-2 font-medium">Insulin</td>
+<td class="py-3 px-2"><span class="text-mono-code font-mono-code text-primary/80">P01308</span></td>
+<td class="py-3 px-2 text-on-surface-variant">Oct 21, 16:45</td>
+<td class="py-3 px-2">
+<span class="px-2 py-0.5 rounded-full bg-secondary/10 text-secondary border border-secondary/20 text-mono-code font-mono-code">-0.21</span>
+</td>
+<td class="py-3 px-2">
+<div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-1.5 rounded bg-surface-variant hover:bg-secondary/20 hover:text-secondary text-on-surface transition-colors tooltip-trigger">
+<span class="material-symbols-outlined text-[16px]">replay</span>
+</button>
+<button class="p-1.5 rounded bg-surface-variant hover:bg-error/20 hover:text-error text-on-surface transition-colors tooltip-trigger">
+<span class="material-symbols-outlined text-[16px]">delete</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="zebra-row hover:bg-white/5 transition-colors group">
+<td class="py-3 px-2 font-medium">Aquaporin-1</td>
+<td class="py-3 px-2"><span class="text-mono-code font-mono-code text-primary/80">P29972</span></td>
+<td class="py-3 px-2 text-on-surface-variant">Oct 18, 11:10</td>
+<td class="py-3 px-2">
+<span class="px-2 py-0.5 rounded-full bg-error/10 text-error border border-error/20 text-mono-code font-mono-code">0.89</span>
+</td>
+<td class="py-3 px-2">
+<div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-1.5 rounded bg-surface-variant hover:bg-secondary/20 hover:text-secondary text-on-surface transition-colors tooltip-trigger">
+<span class="material-symbols-outlined text-[16px]">replay</span>
+</button>
+<button class="p-1.5 rounded bg-surface-variant hover:bg-error/20 hover:text-error text-on-surface transition-colors tooltip-trigger">
+<span class="material-symbols-outlined text-[16px]">delete</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Export History Log -->
+<div class="glass-panel rounded-xl p-panel-padding">
+<div class="flex items-center gap-2 mb-4">
+<span class="material-symbols-outlined text-outline">description</span>
+<h4 class="text-headline-sm font-headline-sm text-on-surface">Export Log</h4>
+</div>
+<ul class="space-y-2">
+<li class="flex items-center justify-between p-3 rounded-lg bg-surface-container-lowest border border-white/5">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-tertiary text-[20px]">check_circle</span>
+<div>
+<p class="text-body-sm font-body-sm text-on-surface">Batch_Analysis_Q4.csv</p>
+<p class="text-label-caps font-label-caps text-on-surface-variant mt-0.5">Size: 2.4 MB • Oct 24</p>
+</div>
+</div>
+<button class="text-secondary hover:bg-secondary/10 p-2 rounded-md transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined text-[18px]">download</span>
+</button>
+</li>
+<li class="flex items-center justify-between p-3 rounded-lg bg-surface-container-lowest border border-white/5">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-tertiary text-[20px]">check_circle</span>
+<div>
+<p class="text-body-sm font-body-sm text-on-surface">Cytochrome_Profile.csv</p>
+<p class="text-label-caps font-label-caps text-on-surface-variant mt-0.5">Size: 450 KB • Oct 20</p>
+</div>
+</div>
+<button class="text-secondary hover:bg-secondary/10 p-2 rounded-md transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined text-[18px]">download</span>
+</button>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer (Shared Component) -->
+<footer class="bg-background dark:bg-background full-width bottom-0 border-t border-white/5 flat no shadows flex justify-between items-center px-margin py-gutter w-full mt-auto">
+<p class="text-body-sm font-body-sm text-on-surface-variant opacity-60">© 2024 FoldSight Analytics | Scientific Attribution v1.2.0</p>
+<div class="flex gap-4">
+<a class="text-body-sm font-body-sm text-on-surface-variant opacity-60 hover:text-on-surface hover:opacity-100 transition-colors" href="#">Methodology</a>
+<a class="text-body-sm font-body-sm text-on-surface-variant opacity-60 hover:text-on-surface hover:opacity-100 transition-colors" href="#">Data Sources</a>
+<a class="text-body-sm font-body-sm text-on-surface-variant opacity-60 hover:text-on-surface hover:opacity-100 transition-colors" href="#">Terms of Service</a>
+</div>
+</footer>
+</main>
+</body></html>

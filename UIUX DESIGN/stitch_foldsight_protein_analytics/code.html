@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>FoldSight Analytics - Structural View</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-primary": "#283044",
+                      "on-error-container": "#ffdad6",
+                      "secondary-fixed-dim": "#7bd0ff",
+                      "surface-variant": "#26364a",
+                      "surface-bright": "#2a3a4f",
+                      "on-secondary-container": "#00374d",
+                      "primary-fixed-dim": "#bec6e0",
+                      "secondary": "#7bd0ff",
+                      "inverse-on-surface": "#213145",
+                      "on-surface-variant": "#c6c6cd",
+                      "on-primary-container": "#798098",
+                      "tertiary-fixed-dim": "#4edea3",
+                      "error": "#ffb4ab",
+                      "secondary-container": "#00a6e0",
+                      "error-container": "#93000a",
+                      "background": "#031427",
+                      "on-primary-fixed": "#131b2e",
+                      "on-tertiary-container": "#009365",
+                      "tertiary-fixed": "#6ffbbe",
+                      "on-error": "#690005",
+                      "surface-container-high": "#1b2b3f",
+                      "outline": "#909097",
+                      "on-secondary-fixed": "#001e2c",
+                      "surface-container-lowest": "#000f21",
+                      "on-surface": "#d3e4fe",
+                      "surface-container-low": "#0b1c30",
+                      "outline-variant": "#45464d",
+                      "surface-dim": "#031427",
+                      "on-tertiary": "#003824",
+                      "on-background": "#d3e4fe",
+                      "primary-container": "#0f172a",
+                      "on-tertiary-fixed-variant": "#005236",
+                      "on-secondary": "#00354a",
+                      "surface": "#031427",
+                      "inverse-surface": "#d3e4fe",
+                      "on-primary-fixed-variant": "#3f465c",
+                      "surface-tint": "#bec6e0",
+                      "primary": "#bec6e0",
+                      "tertiary-container": "#001c10",
+                      "primary-fixed": "#dae2fd",
+                      "inverse-primary": "#565e74",
+                      "on-tertiary-fixed": "#002113",
+                      "surface-container": "#102034",
+                      "tertiary": "#4edea3",
+                      "on-secondary-fixed-variant": "#004c69",
+                      "surface-container-highest": "#26364a",
+                      "secondary-fixed": "#c4e7ff"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "margin": "24px",
+                      "gutter": "16px",
+                      "unit": "4px",
+                      "panel-padding": "20px",
+                      "container-max-width": "1600px"
+              },
+              "fontFamily": {
+                      "label-caps": ["Inter"],
+                      "mono-code": ["JetBrains Mono"],
+                      "headline-md": ["Geist"],
+                      "headline-lg": ["Geist"],
+                      "body-md": ["Inter"],
+                      "body-lg": ["Inter"],
+                      "body-sm": ["Inter"],
+                      "headline-sm": ["Geist"]
+              },
+              "fontSize": {
+                      "label-caps": ["11px", {"lineHeight": "1", "letterSpacing": "0.1em", "fontWeight": "700"}],
+                      "mono-code": ["13px", {"lineHeight": "1.6", "letterSpacing": "0.05em", "fontWeight": "450"}],
+                      "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                      "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                      "body-md": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                      "body-lg": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                      "body-sm": ["12px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                      "headline-sm": ["18px", {"lineHeight": "1.4", "fontWeight": "500"}]
+              }
+            }
+          }
+        }
+    </script>
+<style>
+        /* Custom scrollbar for data density panels */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
+        
+        .glass-panel {
+            background-color: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .zebra-row:nth-child(even) {
+            background-color: rgba(255, 255, 255, 0.03);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface h-screen w-screen overflow-hidden flex font-body-md text-body-md">
+<!-- Shared Component: SideNavBar -->
+<nav class="bg-surface-container/80 backdrop-blur-md dark:bg-surface-container/80 text-primary dark:text-primary shadow-2xl border-r border-white/10 flex flex-col h-screen overflow-y-auto fixed left-0 top-0 w-[280px] z-[60]">
+<!-- Header -->
+<div class="px-margin py-gutter border-b border-white/5 flex items-center gap-3">
+<div class="w-8 h-8 rounded-lg bg-gradient-to-br from-secondary to-tertiary flex items-center justify-center shadow-lg">
+<span class="material-symbols-outlined text-inverse-surface text-sm" style="font-variation-settings: 'FILL' 1;">science</span>
+</div>
+<div>
+<h1 class="text-headline-sm font-headline-sm font-black text-primary tracking-tight">FoldSight</h1>
+<span class="text-label-caps font-label-caps text-on-surface-variant/60 block mt-1">v1.2.0-stable</span>
+</div>
+</div>
+<!-- Main Tabs -->
+<div class="flex-1 py-gutter flex flex-col gap-1 px-2">
+<!-- Active Tab -->
+<a class="bg-secondary-container/20 text-secondary border-r-4 border-secondary flex items-center px-4 py-3 rounded-l-lg hover:bg-white/5 hover:opacity-100 transition-all translate-x-1 duration-150" href="#">
+<span class="material-symbols-outlined mr-3 text-[20px]" style="font-variation-settings: 'FILL' 1;">analytics</span>
+<span class="text-label-caps font-label-caps tracking-wider mt-0.5">Molecular Analysis</span>
+</a>
+<a class="text-on-surface-variant flex items-center px-4 py-3 opacity-80 hover:bg-white/5 hover:opacity-100 transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined mr-3 text-[20px]">dns</span>
+<span class="text-label-caps font-label-caps tracking-wider mt-0.5">Sequence Viewer</span>
+</a>
+<a class="text-on-surface-variant flex items-center px-4 py-3 opacity-80 hover:bg-white/5 hover:opacity-100 transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined mr-3 text-[20px]">tune</span>
+<span class="text-label-caps font-label-caps tracking-wider mt-0.5">Parameter Config</span>
+</a>
+<a class="text-on-surface-variant flex items-center px-4 py-3 opacity-80 hover:bg-white/5 hover:opacity-100 transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined mr-3 text-[20px]">history</span>
+<span class="text-label-caps font-label-caps tracking-wider mt-0.5">Search History</span>
+</a>
+</div>
+<!-- CTA & Footer Tabs -->
+<div class="p-margin border-t border-white/5 flex flex-col gap-3">
+<button class="w-full py-2.5 rounded bg-gradient-to-r from-surface-bright to-surface-container-high border border-outline/30 text-inverse-surface text-label-caps font-label-caps hover:brightness-125 transition-all shadow-md flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[16px]">play_arrow</span>
+                Run New Analysis
+            </button>
+<div class="flex flex-col gap-1 mt-2">
+<a class="text-on-surface-variant flex items-center px-2 py-2 opacity-80 hover:bg-white/5 hover:opacity-100 transition-all rounded" href="#">
+<span class="material-symbols-outlined mr-3 text-[18px]">settings</span>
+<span class="text-body-sm font-body-sm">Settings</span>
+</a>
+<a class="text-on-surface-variant flex items-center px-2 py-2 opacity-80 hover:bg-white/5 hover:opacity-100 transition-all rounded" href="#">
+<span class="material-symbols-outlined mr-3 text-[18px]">menu_book</span>
+<span class="text-body-sm font-body-sm">Documentation</span>
+</a>
+</div>
+</div>
+</nav>
+<!-- Main Content Wrapper -->
+<div class="flex-1 flex flex-col ml-[280px] h-screen overflow-hidden relative">
+<!-- Shared Component: TopAppBar -->
+<header class="bg-surface/70 backdrop-blur-xl dark:bg-surface/70 text-primary dark:text-primary shadow-sm border-b border-white/10 flex justify-between items-center w-full px-margin h-16 sticky top-0 z-50">
+<div class="flex items-center gap-4">
+<h2 class="text-headline-md font-headline-md font-semibold text-on-surface tracking-tight">Structural View</h2>
+<div class="h-4 w-px bg-white/10"></div>
+<span class="text-body-sm font-body-sm text-on-surface-variant px-2 py-1 rounded-md bg-surface-container-high border border-white/5">Target ID: T1049</span>
+</div>
+<div class="flex items-center gap-3">
+<button class="text-label-caps font-label-caps px-4 py-2 rounded border border-outline/50 text-secondary hover:bg-secondary/10 transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">download</span>
+                    Export CSV
+                </button>
+<button class="w-9 h-9 rounded-full bg-surface-container-highest border border-white/10 flex items-center justify-center text-on-surface-variant hover:text-secondary transition-colors" title="Developer Profile">
+<span class="material-symbols-outlined text-[20px]">person</span>
+</button>
+</div>
+</header>
+<!-- Main Viewport -->
+<main class="flex-1 p-gutter flex gap-gutter overflow-hidden relative z-10">
+<!-- Primary 3D Viewer Panel -->
+<section class="flex-1 glass-panel rounded-xl flex flex-col relative overflow-hidden group shadow-lg">
+<!-- Overlay Header -->
+<div class="absolute top-0 left-0 w-full p-4 flex justify-between items-start z-20 pointer-events-none">
+<div class="pointer-events-auto">
+<div class="bg-surface-container-lowest/80 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10 flex items-center gap-2 shadow-xl">
+<span class="w-2 h-2 rounded-full bg-tertiary shadow-[0_0_8px_rgba(78,222,163,0.6)] animate-pulse"></span>
+<span class="text-label-caps font-label-caps text-on-surface">Live Render Engine</span>
+</div>
+</div>
+<div class="flex gap-2 pointer-events-auto">
+<button class="bg-surface-container-lowest/80 backdrop-blur-md p-2 rounded-lg border border-white/10 text-on-surface-variant hover:text-secondary transition-colors shadow-lg" title="Reset View">
+<span class="material-symbols-outlined">center_focus_strong</span>
+</button>
+<button class="bg-surface-container-lowest/80 backdrop-blur-md p-2 rounded-lg border border-white/10 text-on-surface-variant hover:text-secondary transition-colors shadow-lg" title="Toggle Surface">
+<span class="material-symbols-outlined">layers</span>
+</button>
+</div>
+</div>
+<!-- 3D Visualization Area (Simulated with Placeholder Image) -->
+<div class="w-full h-full flex items-center justify-center relative cursor-move bg-[#020b14]">
+<!-- Background ambient glow -->
+<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3/4 h-3/4 bg-secondary/10 rounded-full blur-[100px] pointer-events-none"></div>
+<img class="w-full h-full object-cover object-center opacity-90 mix-blend-screen" data-alt="A highly detailed, photorealistic 3D rendering of a complex protein molecular structure, specifically a ribbon diagram, set against a deep, dark space-like background. The protein structure should be illuminated with precise, scientific studio lighting, highlighting its tertiary structure with vibrant cyan and deep blue tones to indicate high confidence regions, and subtle orange or red tips for disordered areas. The aesthetic is ultra-modern, high-tech bioinformatics software, conveying precision and authoritative scientific analysis. Wide angle, crisp focus." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCPvTzyl0bFvm1HFob3qRevL5GGLdT9-apgwTUrA-IlNgQIOMDbMNWH6VwJZSyXYES8dze8Ai7f6CHDJhQDdSdzLuDDtig-anABXNoEyhD15mkR1evbgKA4Js37Zho_Zc6cqr-Zi9vyancvy87_iYQbvO2ue74sfqVKfMLCE8miK1t5WjRPhxKP57HksWiU-YZ-56sAQlSm1HnEKRLv75V9s0URLxiwqNUhnrsLeiDx9MsMMImZdfiy"/>
+</div>
+<!-- Bottom Floating Controls -->
+<div class="absolute bottom-4 left-1/2 -translate-x-1/2 bg-surface-container-lowest/80 backdrop-blur-xl border border-white/10 rounded-full px-6 py-2 flex items-center gap-6 shadow-2xl z-20">
+<button class="text-on-surface-variant hover:text-secondary flex flex-col items-center gap-1 transition-colors">
+<span class="material-symbols-outlined text-[20px]">360</span>
+</button>
+<div class="w-px h-6 bg-white/10"></div>
+<div class="flex items-center gap-3">
+<button class="text-on-surface-variant hover:text-on-surface"><span class="material-symbols-outlined text-[18px]">remove</span></button>
+<span class="text-mono-code font-mono-code text-on-surface text-xs">100%</span>
+<button class="text-on-surface-variant hover:text-on-surface"><span class="material-symbols-outlined text-[18px]">add</span></button>
+</div>
+<div class="w-px h-6 bg-white/10"></div>
+<button class="text-on-surface-variant hover:text-secondary flex flex-col items-center gap-1 transition-colors">
+<span class="material-symbols-outlined text-[20px]">photo_camera</span>
+</button>
+</div>
+</section>
+<!-- Right Sidebar: Data density panels -->
+<aside class="w-[380px] flex flex-col gap-gutter h-full z-10">
+<!-- Confidence Analysis Panel -->
+<div class="glass-panel rounded-xl p-panel-padding flex flex-col gap-4 shadow-lg shrink-0">
+<div class="flex items-center justify-between border-b border-white/5 pb-3">
+<h3 class="text-headline-sm font-headline-sm font-medium text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[20px]">monitoring</span>
+                            Confidence (pLDDT)
+                        </h3>
+<span class="text-label-caps font-label-caps text-secondary bg-secondary/10 px-2 py-1 rounded">Avg: 87.4</span>
+</div>
+<div class="flex flex-col gap-3">
+<!-- High Confidence Bar -->
+<div>
+<div class="flex justify-between text-body-sm font-body-sm text-on-surface-variant mb-1">
+<span>High (&gt;90)</span>
+<span class="font-mono-code text-on-surface">64%</span>
+</div>
+<div class="w-full h-2 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-secondary rounded-full" style="width: 64%"></div>
+</div>
+</div>
+<!-- Med Confidence Bar -->
+<div>
+<div class="flex justify-between text-body-sm font-body-sm text-on-surface-variant mb-1">
+<span>Medium (70-90)</span>
+<span class="font-mono-code text-on-surface">22%</span>
+</div>
+<div class="w-full h-2 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-tertiary rounded-full" style="width: 22%"></div>
+</div>
+</div>
+<!-- Low Confidence Bar -->
+<div>
+<div class="flex justify-between text-body-sm font-body-sm text-on-surface-variant mb-1">
+<span>Low/Disordered (&lt;70)</span>
+<span class="font-mono-code text-error">14%</span>
+</div>
+<div class="w-full h-2 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-error rounded-full" style="width: 14%"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Residue Inspector Panel -->
+<div class="glass-panel rounded-xl flex flex-col flex-1 shadow-lg overflow-hidden border border-white/10">
+<div class="p-panel-padding border-b border-white/5 flex items-center justify-between bg-surface-container-high/30">
+<h3 class="text-headline-sm font-headline-sm font-medium text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[20px]">list_alt</span>
+                            Residue Inspector
+                        </h3>
+<button class="text-on-surface-variant hover:text-on-surface">
+<span class="material-symbols-outlined text-[18px]">filter_list</span>
+</button>
+</div>
+<!-- Table Header -->
+<div class="grid grid-cols-4 gap-2 px-panel-padding py-2 border-b border-white/5 bg-surface-container-lowest/50 text-label-caps font-label-caps text-on-surface-variant uppercase tracking-wider">
+<div>Pos</div>
+<div>Type</div>
+<div>pLDDT</div>
+<div class="text-right">Prop</div>
+</div>
+<!-- Scrollable List -->
+<div class="flex-1 overflow-y-auto px-1 py-1">
+<!-- Row items mapping to mono-code font -->
+<div class="grid grid-cols-4 gap-2 px-4 py-2 hover:bg-white/5 cursor-pointer zebra-row transition-colors items-center rounded text-mono-code font-mono-code text-sm">
+<div class="text-on-surface-variant">42</div>
+<div class="text-secondary">MET</div>
+<div class="text-secondary">94.2</div>
+<div class="text-right"><span class="inline-block w-2 h-2 rounded-full bg-error" title="Hydrophobic"></span></div>
+</div>
+<div class="grid grid-cols-4 gap-2 px-4 py-2 hover:bg-white/5 cursor-pointer zebra-row transition-colors items-center rounded text-mono-code font-mono-code text-sm">
+<div class="text-on-surface-variant">43</div>
+<div class="text-on-surface">ALA</div>
+<div class="text-secondary">91.8</div>
+<div class="text-right"><span class="inline-block w-2 h-2 rounded-full bg-error" title="Hydrophobic"></span></div>
+</div>
+<div class="grid grid-cols-4 gap-2 px-4 py-2 hover:bg-white/5 cursor-pointer zebra-row transition-colors items-center rounded text-mono-code font-mono-code text-sm">
+<div class="text-on-surface-variant">44</div>
+<div class="text-on-surface">GLY</div>
+<div class="text-tertiary">88.5</div>
+<div class="text-right"><span class="inline-block w-2 h-2 rounded-full bg-outline" title="Neutral"></span></div>
+</div>
+<div class="grid grid-cols-4 gap-2 px-4 py-2 hover:bg-white/5 cursor-pointer zebra-row transition-colors items-center rounded text-mono-code font-mono-code text-sm bg-secondary/10 border border-secondary/30" title="Currently Selected">
+<div class="text-on-surface-variant">45</div>
+<div class="text-primary font-bold">LYS</div>
+<div class="text-secondary">96.0</div>
+<div class="text-right"><span class="inline-block w-2 h-2 rounded-full bg-secondary" title="Pos Charge"></span></div>
+</div>
+<div class="grid grid-cols-4 gap-2 px-4 py-2 hover:bg-white/5 cursor-pointer zebra-row transition-colors items-center rounded text-mono-code font-mono-code text-sm">
+<div class="text-on-surface-variant">46</div>
+<div class="text-on-surface">SER</div>
+<div class="text-tertiary">82.1</div>
+<div class="text-right"><span class="inline-block w-2 h-2 rounded-full bg-outline" title="Neutral"></span></div>
+</div>
+<div class="grid grid-cols-4 gap-2 px-4 py-2 hover:bg-white/5 cursor-pointer zebra-row transition-colors items-center rounded text-mono-code font-mono-code text-sm">
+<div class="text-on-surface-variant">47</div>
+<div class="text-error">PRO</div>
+<div class="text-error">45.2</div>
+<div class="text-right"><span class="inline-block w-2 h-2 rounded-full bg-error" title="Hydrophobic"></span></div>
+</div>
+<div class="grid grid-cols-4 gap-2 px-4 py-2 hover:bg-white/5 cursor-pointer zebra-row transition-colors items-center rounded text-mono-code font-mono-code text-sm">
+<div class="text-on-surface-variant">48</div>
+<div class="text-error">ASP</div>
+<div class="text-error">32.8</div>
+<div class="text-right"><span class="inline-block w-2 h-2 rounded-full bg-error-container" title="Neg Charge"></span></div>
+</div>
+<!-- Padding for scroll -->
+<div class="h-4"></div>
+</div>
+</div>
+</aside>
+</main>
+</div>
+</body></html>
