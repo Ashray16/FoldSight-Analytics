@@ -8,25 +8,54 @@ import './index.css';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend, Filler);
 
-const Viewer3D = ({ cifUrl, sequence, styleMode }) => {
+const Logo = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M4 12C4 7.58172 7.58172 4 12 4C16.4183 4 20 7.58172 20 12C20 16.4183 16.4183 20 12 20C7.58172 20 4 16.4183 4 12Z" stroke="currentColor" strokeWidth="2"/>
+    <path d="M8 12C8 14.2091 9.79086 16 12 16C14.2091 16 16 14.2091 16 12C16 9.79086 14.2091 8 12 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+  </svg>
+);
+
+const Viewer3D = ({ cifUrl, sequence, styleMode, highlightDomain }) => {
   const viewerRef = useRef(null);
   const [viewerInstance, setViewerInstance] = useState(null);
   
-  const applyStyle = (viewer, mode) => {
+  const applyStyle = (viewer, mode, highlight) => {
     viewer.removeAllSurfaces();
     viewer.setStyle({}, {}); 
     
     // AlphaFold pLDDT is stored in the B-factor column ('b'). Red (low) to Blue (high)
     const plddtColors = {prop: 'b', gradient: 'rwb', min: 50, max: 100};
     
-    if (mode === 'cartoon') {
-      viewer.setStyle({}, { cartoon: { colorscheme: plddtColors } });
-    } else if (mode === 'stick') {
-      viewer.setStyle({}, { stick: { colorscheme: plddtColors } });
-    } else if (mode === 'sphere') {
-      viewer.setStyle({}, { sphere: { colorscheme: plddtColors } });
-    } else if (mode === 'surface') {
-      viewer.addSurface(window.$3Dmol.VDW, {opacity: 1.0, colorscheme: plddtColors});
+    if (highlight) {
+      const [start, end] = highlight;
+      const highlightRange = [];
+      for(let i=start; i<=end; i++) highlightRange.push(i);
+
+      if (mode === 'cartoon') {
+        viewer.setStyle({}, { cartoon: { color: '#334155' } });
+        viewer.setStyle({resi: highlightRange}, { cartoon: { colorscheme: plddtColors } });
+      } else if (mode === 'stick') {
+        viewer.setStyle({}, { stick: { color: '#334155' } });
+        viewer.setStyle({resi: highlightRange}, { stick: { colorscheme: plddtColors } });
+      } else if (mode === 'sphere') {
+        viewer.setStyle({}, { sphere: { color: '#334155' } });
+        viewer.setStyle({resi: highlightRange}, { sphere: { colorscheme: plddtColors } });
+      } else if (mode === 'surface') {
+        viewer.addSurface(window.$3Dmol.VDW, {opacity: 0.4, color: '#334155'});
+        viewer.addSurface(window.$3Dmol.VDW, {opacity: 1.0, colorscheme: plddtColors}, {resi: highlightRange});
+      }
+      viewer.zoomTo({resi: highlightRange});
+    } else {
+      if (mode === 'cartoon') {
+        viewer.setStyle({}, { cartoon: { colorscheme: plddtColors } });
+      } else if (mode === 'stick') {
+        viewer.setStyle({}, { stick: { colorscheme: plddtColors } });
+      } else if (mode === 'sphere') {
+        viewer.setStyle({}, { sphere: { colorscheme: plddtColors } });
+      } else if (mode === 'surface') {
+        viewer.addSurface(window.$3Dmol.VDW, {opacity: 1.0, colorscheme: plddtColors});
+      }
+      viewer.zoomTo();
     }
 
     // Add interactive hover tooltips
@@ -63,8 +92,7 @@ const Viewer3D = ({ cifUrl, sequence, styleMode }) => {
     if (cifUrl) {
       axios.get(cifUrl).then(res => {
         viewer.addModel(res.data, "cif");
-        applyStyle(viewer, styleMode);
-        viewer.zoomTo();
+        applyStyle(viewer, styleMode, highlightDomain);
         viewer.render();
       }).catch(err => console.error("Error fetching CIF", err));
     }
@@ -72,10 +100,10 @@ const Viewer3D = ({ cifUrl, sequence, styleMode }) => {
 
   useEffect(() => {
     if (viewerInstance) {
-      applyStyle(viewerInstance, styleMode);
+      applyStyle(viewerInstance, styleMode, highlightDomain);
       viewerInstance.render();
     }
-  }, [styleMode, viewerInstance]);
+  }, [styleMode, highlightDomain, viewerInstance]);
 
   return (
     <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -91,6 +119,9 @@ const Viewer3D = ({ cifUrl, sequence, styleMode }) => {
 };
 
 export default function App() {
+  const [activeTab, setActiveTab] = useState('molecular'); // 'molecular' | 'sequence'
+  const [selectedDomain, setSelectedDomain] = useState(null);
+  
   const [inputType, setInputType] = useState('uniprot');
   const [inputValue, setInputValue] = useState('');
   
@@ -100,6 +131,7 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState(null);
   const [hydroData, setHydroData] = useState([]);
+  const [proteinFunction, setProteinFunction] = useState('');
   const [error, setError] = useState('');
   
   const [history, setHistory] = useState([]);
@@ -120,7 +152,6 @@ export default function App() {
     setHistory(prev => {
       const filtered = prev.filter(h => h.value !== val);
       const newHistory = [{ type, value: val, id: Date.now() }, ...filtered].slice(0, 5);
-      // Persist to local storage so it survives page refreshes
       localStorage.setItem('search_history', JSON.stringify(newHistory));
       return newHistory;
     });
@@ -140,6 +171,20 @@ export default function App() {
     reader.readAsText(file);
   };
 
+  const fetchProteinFunction = async (uniprotId) => {
+    try {
+      const res = await axios.get(`https://rest.uniprot.org/uniprotkb/${uniprotId}.json`);
+      const funcComment = res.data.comments?.find(c => c.commentType === 'FUNCTION');
+      if (funcComment && funcComment.texts && funcComment.texts.length > 0) {
+        setProteinFunction(funcComment.texts[0].value);
+      } else {
+        setProteinFunction('No functional description available in UniProt for this protein.');
+      }
+    } catch (err) {
+      setProteinFunction('Could not fetch functional description.');
+    }
+  };
+
   const handleAnalyze = async (overrideType, overrideVal) => {
     const typeToUse = overrideType || inputType;
     const valToUse = overrideVal || inputValue;
@@ -148,6 +193,7 @@ export default function App() {
     
     setLoading(true);
     setError('');
+    setProteinFunction('');
     
     try {
       const payload = typeToUse === 'uniprot' 
@@ -159,9 +205,17 @@ export default function App() {
       setHydroData(res.data.hydrophobicity_plot);
       addToHistory(typeToUse, valToUse);
       
+      if (typeToUse === 'uniprot') {
+         fetchProteinFunction(valToUse);
+      } else if (res.data.uniprot_id) {
+         fetchProteinFunction(res.data.uniprot_id);
+      }
+      
       // Update UI state in case it was triggered from history
       setInputType(typeToUse);
       setInputValue(valToUse);
+      setActiveTab('molecular');
+      setSelectedDomain(null);
     } catch (err) {
       setError(err.response?.data?.detail || 'An error occurred during analysis');
     } finally {
@@ -180,8 +234,7 @@ export default function App() {
       }).catch(err => console.error("Error fetching updated hydrophobicity", err));
     }
   }, [windowSize]); 
-  // intentionally excluding results.sequence from dep array to avoid double fetch on initial load
-
+  
   const exportCSV = () => {
     if (!results) return;
     let csv = "Metric,Value\n";
@@ -217,7 +270,7 @@ export default function App() {
       datasets: [{
         label: 'Frequency',
         data: Object.values(results.amino_acid_counts),
-        backgroundColor: '#7bd0ff', // secondary
+        backgroundColor: '#3b82f6', // blue-500
         borderRadius: 4
       }],
     };
@@ -227,8 +280,8 @@ export default function App() {
       datasets: [{
         label: 'Score',
         data: hydroData,
-        borderColor: '#4edea3', // tertiary
-        backgroundColor: 'rgba(78, 222, 163, 0.1)',
+        borderColor: '#14b8a6', // teal-500
+        backgroundColor: 'rgba(20, 184, 166, 0.1)',
         tension: 0.4,
         fill: true,
         pointRadius: 0
@@ -258,8 +311,16 @@ export default function App() {
           }
         },
         scales: {
-            x: { ticks: {color: '#909097'}, grid: {color: 'rgba(255,255,255,0.05)'} },
-            y: { ticks: {color: '#909097'}, grid: {color: 'rgba(255,255,255,0.05)'} }
+            x: { 
+              title: { display: true, text: 'Amino Acid Type', color: '#94a3b8', font: { size: 12 } },
+              ticks: {color: '#94a3b8'}, 
+              grid: {color: 'rgba(255,255,255,0.05)'} 
+            },
+            y: { 
+              title: { display: true, text: 'Frequency (Count)', color: '#94a3b8', font: { size: 12 } },
+              ticks: {color: '#94a3b8'}, 
+              grid: {color: 'rgba(255,255,255,0.05)'} 
+            }
         }
     };
 
@@ -268,8 +329,16 @@ export default function App() {
         maintainAspectRatio: false,
         plugins: { legend: { display: false } },
         scales: {
-            x: { ticks: {color: '#909097'}, grid: {color: 'rgba(255,255,255,0.05)'} },
-            y: { ticks: {color: '#909097'}, grid: {color: 'rgba(255,255,255,0.05)'} }
+            x: { 
+              title: { display: true, text: 'Sequence Position', color: '#94a3b8', font: { size: 12 } },
+              ticks: {color: '#94a3b8', maxTicksLimit: 10}, 
+              grid: {color: 'rgba(255,255,255,0.05)'} 
+            },
+            y: { 
+              title: { display: true, text: 'Kyte-Doolittle Score', color: '#94a3b8', font: { size: 12 } },
+              ticks: {color: '#94a3b8'}, 
+              grid: {color: 'rgba(255,255,255,0.05)'} 
+            }
         }
     };
 
@@ -277,7 +346,7 @@ export default function App() {
       <div className="grid-2">
         <div className="glass-panel" style={{padding: '16px'}}>
           <div className="panel-title">
-            <h3><span className="material-symbols-outlined">bar_chart</span> Amino Acid Comp</h3>
+            <h3><span className="material-symbols-outlined" style={{color: 'var(--secondary)'}}>bar_chart</span> Amino Acid Comp</h3>
           </div>
           <div className="chart-wrapper">
             <Bar data={aaData} options={aaChartOptions} />
@@ -285,7 +354,7 @@ export default function App() {
         </div>
         <div className="glass-panel" style={{padding: '16px'}}>
           <div className="panel-title">
-            <h3><span className="material-symbols-outlined">timeline</span> Hydrophobicity</h3>
+            <h3><span className="material-symbols-outlined" style={{color: 'var(--tertiary)'}}>timeline</span> Hydrophobicity</h3>
           </div>
           <div className="chart-wrapper">
             <Line data={hData} options={hydroChartOptions} />
@@ -307,17 +376,17 @@ export default function App() {
       <nav className="sidebar">
         <div className="sidebar-header">
           <div className="brand-icon">
-            <span className="material-symbols-outlined">science</span>
+            <Logo />
           </div>
           <div className="brand-title">FoldSight</div>
         </div>
         
         <div className="sidebar-nav">
-          <a className="nav-item active">
+          <a className={`nav-item ${activeTab === 'molecular' ? 'active' : ''}`} onClick={() => setActiveTab('molecular')} style={{cursor: 'pointer'}}>
             <span className="material-symbols-outlined" style={{marginRight: '12px'}}>analytics</span>
             <span className="text-label-caps">Molecular Analysis</span>
           </a>
-          <a className="nav-item">
+          <a className={`nav-item ${activeTab === 'sequence' ? 'active' : ''}`} onClick={() => setActiveTab('sequence')} style={{cursor: 'pointer'}}>
             <span className="material-symbols-outlined" style={{marginRight: '12px'}}>dns</span>
             <span className="text-label-caps">Sequence Viewer</span>
           </a>
@@ -396,7 +465,7 @@ export default function App() {
       <div className="main-content">
         <header className="top-bar">
           <div style={{display: 'flex', alignItems: 'center', gap: '16px'}}>
-            <h2 className="text-headline-md">{results?.protein_name || 'Protein Analysis'}</h2>
+            <h2 className="text-headline-md">{results?.protein_name || 'Protein Dashboard'}</h2>
             <div className="divider" style={{height: '16px'}}></div>
             <span style={{fontSize: '12px', color: 'var(--on-surface-variant)', background: 'var(--surface-container-high)', padding: '4px 8px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.05)'}}>
               {results?.uniprot_id ? `Target ID: ${results.uniprot_id}` : 'No Target Selected'}
@@ -414,64 +483,117 @@ export default function App() {
             </div>
           )}
 
-          {/* Left Area (Grid, Viewer, Charts) */}
+          {/* Left Area (Grid, Viewer, Charts, or Sequence Viewer) */}
           <div style={{flex: 1, display: 'flex', flexDirection: 'column', gap: '16px', minWidth: 0}}>
             
-            {/* Stats Grid */}
-            {results && (
-              <div className="grid-2" style={{gridTemplateColumns: 'repeat(4, 1fr)'}}>
-                <div className="card-stat">
-                  <div className="card-stat-title">Molecular Weight</div>
-                  <div className="card-stat-value">{(results.properties.molecular_weight / 1000).toFixed(1)}k</div>
-                  <div style={{fontSize: '11px', color: 'var(--on-surface-variant)', marginTop: '4px'}}>Daltons (kDa)</div>
-                </div>
-                <div className="card-stat">
-                  <div className="card-stat-title">Isoelectric Point</div>
-                  <div className="card-stat-value">{results.properties.pi.toFixed(2)}</div>
-                  <div style={{fontSize: '11px', color: 'var(--on-surface-variant)', marginTop: '4px'}}>pH Level</div>
-                </div>
-                <div className="card-stat" style={{borderTop: `2px solid ${results.properties.gravy > 0 ? 'var(--secondary)' : 'var(--tertiary)'}`}}>
-                  <div className="card-stat-title">GRAVY Score</div>
-                  <div className="card-stat-value">{results.properties.gravy.toFixed(3)}</div>
-                  <div style={{fontSize: '11px', color: results.properties.gravy > 0 ? 'var(--secondary)' : 'var(--tertiary)', marginTop: '4px', fontWeight: '600'}}>{results.properties.classification}</div>
-                </div>
-                <div className="card-stat">
-                  <div className="card-stat-title">Sec. Structure</div>
-                  <div className="card-stat-value">{(results.secondary_structure.helix*100).toFixed(0)}%</div>
-                  <div style={{fontSize: '11px', color: 'var(--on-surface-variant)', marginTop: '4px'}}>Helices ({(results.secondary_structure.sheet*100).toFixed(0)}% Sheets)</div>
-                </div>
+            {/* Protein Function / Description */}
+            {proteinFunction && (
+              <div style={{
+                 padding: '16px 20px', 
+                 backgroundColor: 'rgba(96, 165, 250, 0.05)', 
+                 borderLeft: '4px solid var(--secondary)',
+                 borderRadius: '8px',
+                 color: 'var(--on-surface)',
+                 fontSize: '14px',
+                 lineHeight: '1.6',
+                 border: '1px solid rgba(255,255,255,0.05)',
+                 borderLeft: '4px solid var(--secondary)'
+              }}>
+                <strong style={{color: 'var(--secondary)'}}>About this protein: </strong> {proteinFunction}
               </div>
             )}
-
-            {/* 3D Viewer */}
-            <section className="glass-panel viewer-container">
-              <div className="viewer-overlay">
+            
+            {activeTab === 'molecular' ? (
+              <>
+                {/* Stats Grid */}
                 {results && (
-                  <div className="status-badge">
-                    <div className="pulse-dot"></div>
-                    <span className="text-label-caps" style={{color: 'var(--on-surface)'}}>Live Render Engine</span>
+                  <div className="grid-2" style={{gridTemplateColumns: 'repeat(4, 1fr)'}}>
+                    <div className="card-stat">
+                      <div className="card-stat-title">Molecular Weight</div>
+                      <div className="card-stat-value">{(results.properties.molecular_weight / 1000).toFixed(1)}k</div>
+                      <div style={{fontSize: '11px', color: 'var(--on-surface-variant)', marginTop: '4px'}}>Daltons (kDa)</div>
+                    </div>
+                    <div className="card-stat">
+                      <div className="card-stat-title">Isoelectric Point</div>
+                      <div className="card-stat-value">{results.properties.pi.toFixed(2)}</div>
+                      <div style={{fontSize: '11px', color: 'var(--on-surface-variant)', marginTop: '4px'}}>pH Level</div>
+                    </div>
+                    <div className="card-stat" style={{borderTop: `2px solid ${results.properties.gravy > 0 ? 'var(--secondary)' : 'var(--tertiary)'}`}}>
+                      <div className="card-stat-title">GRAVY Score</div>
+                      <div className="card-stat-value">{results.properties.gravy.toFixed(3)}</div>
+                      <div style={{fontSize: '11px', color: results.properties.gravy > 0 ? 'var(--secondary)' : 'var(--tertiary)', marginTop: '4px', fontWeight: '600'}}>{results.properties.classification}</div>
+                    </div>
+                    <div className="card-stat">
+                      <div className="card-stat-title">Sec. Structure</div>
+                      <div className="card-stat-value">{(results.secondary_structure.helix*100).toFixed(0)}%</div>
+                      <div style={{fontSize: '11px', color: 'var(--on-surface-variant)', marginTop: '4px'}}>Helices ({(results.secondary_structure.sheet*100).toFixed(0)}% Sheets)</div>
+                    </div>
                   </div>
                 )}
-              </div>
-              
-              <div style={{flex: 1, backgroundColor: '#010813', position: 'relative'}}>
-                <Viewer3D cifUrl={results?.cif_url} sequence={results?.sequence} styleMode={styleMode} />
-              </div>
-              
-              {results && (
-                <div className="floating-controls">
-                  <button className="icon-btn" title="Cycle Render Style" onClick={cycleStyleMode}>
-                    <span className="material-symbols-outlined">layers</span>
-                  </button>
-                  <div className="divider"></div>
-                  <div className="text-mono" style={{color: 'var(--on-surface)', fontSize: '11px', textTransform: 'uppercase'}}>{styleMode}</div>
-                </div>
-              )}
-            </section>
 
-            {/* Charts */}
-            {renderCharts()}
-            
+                {/* 3D Viewer */}
+                <section className="glass-panel viewer-container">
+                  <div className="viewer-overlay">
+                    {results && (
+                      <div className="status-badge">
+                        <div className="pulse-dot"></div>
+                        <span className="text-label-caps" style={{color: 'var(--on-surface)'}}>Live Render Engine</span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div style={{flex: 1, backgroundColor: '#020617', position: 'relative'}}>
+                    <Viewer3D cifUrl={results?.cif_url} sequence={results?.sequence} styleMode={styleMode} highlightDomain={selectedDomain} />
+                  </div>
+                  
+                  {results && (
+                    <div className="floating-controls">
+                      <button className="icon-btn" title="Cycle Render Style" onClick={cycleStyleMode}>
+                        <span className="material-symbols-outlined">layers</span>
+                      </button>
+                      <div className="divider"></div>
+                      <div className="text-mono" style={{color: 'var(--on-surface)', fontSize: '11px', textTransform: 'uppercase'}}>{styleMode}</div>
+                    </div>
+                  )}
+                </section>
+
+                {/* Charts */}
+                {renderCharts()}
+              </>
+            ) : (
+              <div className="glass-panel" style={{padding: '24px', flex: 1, overflowY: 'auto'}}>
+                <div className="panel-title" style={{marginBottom: '20px'}}>
+                  <h3><span className="material-symbols-outlined">dns</span> Sequence Viewer</h3>
+                </div>
+                {results?.sequence ? (
+                  <div style={{
+                    fontFamily: 'JetBrains Mono, monospace', 
+                    fontSize: '14px', 
+                    lineHeight: '1.8', 
+                    letterSpacing: '2px', 
+                    wordBreak: 'break-all',
+                    color: 'var(--on-surface)'
+                  }}>
+                    {results.sequence.split('').map((aa, i) => {
+                      const isHighlighted = selectedDomain && (i + 1) >= selectedDomain[0] && (i + 1) <= selectedDomain[1];
+                      return (
+                        <span key={i} style={{
+                          backgroundColor: isHighlighted ? 'rgba(20, 184, 166, 0.2)' : 'transparent',
+                          color: isHighlighted ? '#14b8a6' : 'inherit',
+                          padding: isHighlighted ? '2px 0' : '0',
+                          borderRadius: '2px',
+                          transition: 'all 0.2s'
+                        }}>
+                          {aa}
+                        </span>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div style={{color: 'var(--on-surface-variant)'}}>No sequence available. Run an analysis.</div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Right Sidebar (Confidence + Domain PAE Inspector) */}
@@ -483,7 +605,7 @@ export default function App() {
                 <div className="panel-title" style={{marginBottom: '20px'}}>
                   <h3><span className="material-symbols-outlined">monitoring</span> Confidence (pLDDT)</h3>
                   {results.alphafold?.plddt && (
-                    <span style={{fontSize: '11px', background: 'rgba(123, 208, 255, 0.1)', color: 'var(--secondary)', padding: '4px 8px', borderRadius: '4px', fontWeight: '700'}}>
+                    <span style={{fontSize: '11px', background: 'rgba(59, 130, 246, 0.1)', color: 'var(--secondary)', padding: '4px 8px', borderRadius: '4px', fontWeight: '700'}}>
                       Avg: {results.alphafold.plddt.global.toFixed(1)}
                     </span>
                   )}
@@ -514,7 +636,7 @@ export default function App() {
 
               {/* Domains / PAE Inspector Panel */}
               <div className="glass-panel" style={{flex: 1, display: 'flex', flexDirection: 'column', minHeight: '300px'}}>
-                <div style={{padding: '20px', borderBottom: '1px solid rgba(255,255,255,0.05)', backgroundColor: 'rgba(27, 43, 63, 0.3)', borderTopLeftRadius: '12px', borderTopRightRadius: '12px'}}>
+                <div style={{padding: '20px', borderBottom: '1px solid rgba(255,255,255,0.05)', backgroundColor: 'rgba(15, 23, 42, 0.5)', borderTopLeftRadius: '12px', borderTopRightRadius: '12px'}}>
                   <h3 style={{display: 'flex', alignItems: 'center', gap: '8px', margin: 0, fontSize: '18px', fontWeight: '500', color: 'var(--on-surface)'}}>
                     <span className="material-symbols-outlined" style={{color: 'var(--secondary)'}}>view_agenda</span> Rigid Domains (PAE)
                   </h3>
@@ -534,7 +656,17 @@ export default function App() {
 
                       {results.alphafold.pae.domains.length > 0 ? (
                         results.alphafold.pae.domains.map((dom, i) => (
-                          <div key={i} className="zebra-row" style={{gridTemplateColumns: '1fr 1.5fr 1fr'}}>
+                          <div 
+                            key={i} 
+                            className="zebra-row" 
+                            style={{
+                              gridTemplateColumns: '1fr 1.5fr 1fr',
+                              cursor: 'pointer',
+                              backgroundColor: selectedDomain && selectedDomain[0] === dom[0] ? 'rgba(20, 184, 166, 0.1)' : undefined,
+                              borderLeft: selectedDomain && selectedDomain[0] === dom[0] ? '3px solid var(--tertiary)' : '3px solid transparent'
+                            }}
+                            onClick={() => setSelectedDomain(selectedDomain && selectedDomain[0] === dom[0] ? null : dom)}
+                          >
                             <div style={{color: 'var(--secondary)'}}>Dom {i+1}</div>
                             <div>{dom[0]} - {dom[1]}</div>
                             <div style={{textAlign: 'right'}}>{dom[1] - dom[0] + 1} aa</div>
