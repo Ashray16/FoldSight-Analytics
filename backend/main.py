@@ -31,16 +31,16 @@ app.add_middleware(
 )
 
 class AnalyzeRequest(BaseModel):
-    sequence: Optional[str] = Field(None, max_length=10000, description="Raw amino acid sequence")
+    sequence: Optional[str] = Field(None, max_length=10000, pattern=r"^[A-Za-z\s]+$", description="Raw amino acid sequence")
     uniprot_id: Optional[str] = Field(None, pattern=r"^[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2}$|^[O,P,Q][0-9][A-Z0-9]{3}[0-9]$", description="UniProt Accession ID")
     window_size: Optional[int] = Field(9, ge=3, le=41)
 
 class HydroRequest(BaseModel):
-    sequence: str = Field(..., max_length=10000)
+    sequence: str = Field(..., max_length=10000, pattern=r"^[A-Za-z\s]+$")
     window_size: int = Field(9, ge=3, le=41)
 
 @app.post("/api/hydrophobicity")
-@limiter.limit("5/minute")
+@limiter.limit("5/15minute")
 def calculate_hydrophobicity(request: Request, req: HydroRequest):
     if not req.sequence:
         raise HTTPException(status_code=400, detail="Empty sequence")
@@ -182,7 +182,7 @@ def analyze_pae(pae_data):
     }
 
 @app.post("/api/analyze")
-@limiter.limit("5/minute")
+@limiter.limit("5/15minute")
 def analyze_protein(request: Request, req: AnalyzeRequest):
     sequence = ""
     uniprot_id = req.uniprot_id
