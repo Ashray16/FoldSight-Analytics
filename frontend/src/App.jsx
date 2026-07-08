@@ -8,18 +8,20 @@ import './index.css';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend, Filler);
 
-const extractErrorMessage = (err) => {
-  if (err.response && err.response.data) {
-    if (typeof err.response.data.detail === 'string') return err.response.data.detail;
-    if (Array.isArray(err.response.data.detail)) return JSON.stringify(err.response.data.detail);
-    if (typeof err.response.data === 'string' && err.response.data.includes('<html')) return 'API Endpoint not found or Server Error.';
-    return JSON.stringify(err.response.data);
-  }
-  return err.message || 'An error occurred during analysis';
-};
-
 const Logo = () => (
-  <img src="/logo.png" alt="FoldSight Logo" style={{ width: '24px', height: '24px', objectFit: 'contain' }} />
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M2 15c6.667-6 13.333 0 20-6" />
+    <path d="M9 22c1.798-1.998 2.518-3.995 2.808-5.993" />
+    <path d="M15 2c-1.798 1.998-2.518 3.995-2.808 5.993" />
+    <path d="m17 6-2.5-2.5" />
+    <path d="m14 8-1-1" />
+    <path d="m7 18 2.5 2.5" />
+    <path d="m3.5 14.5.5.5" />
+    <path d="m20 9 .5.5" />
+    <path d="m6.5 12.5 1 1" />
+    <path d="m16.5 10.5 1 1" />
+    <path d="m10 16 1.5 1.5" />
+  </svg>
 );
 
 const Viewer3D = ({ cifUrl, sequence, styleMode, highlightDomain }) => {
@@ -125,143 +127,9 @@ const Viewer3D = ({ cifUrl, sequence, styleMode, highlightDomain }) => {
   );
 };
 
-// Extracted Domain Track Map Component
-const DomainTrackMap = ({ sequenceLength, domains, plddtData }) => {
-  if (!sequenceLength) return null;
-  
-  return (
-    <div style={{marginTop: '20px'}}>
-      <h3 style={{fontSize: '14px', marginBottom: '8px', color: 'var(--on-surface)'}}>1D Domain & Disorder Map</h3>
-      <div className="domain-track-container">
-        {domains && domains.map((dom, i) => {
-          const left = ((dom[0] - 1) / sequenceLength) * 100;
-          const width = ((dom[1] - dom[0] + 1) / sequenceLength) * 100;
-          return (
-            <div key={i} className="domain-block" style={{left: `${left}%`, width: `${width}%`}} title={`Domain ${i+1}: ${dom[0]}-${dom[1]}`}>
-              Dom {i+1}
-            </div>
-          );
-        })}
-        {/* Placeholder for Disorder - If we had per-residue pLDDT we could plot it accurately. 
-            For now, we just show the track as a visualization tool */}
-      </div>
-      <div style={{display: 'flex', gap: '16px', marginTop: '8px', fontSize: '11px', color: 'var(--on-surface-variant)'}}>
-        <div style={{display: 'flex', alignItems: 'center', gap: '4px'}}>
-          <div style={{width: '12px', height: '12px', background: 'rgba(59, 130, 246, 0.4)', border: '1px solid rgba(59, 130, 246, 0.8)'}}></div>
-          Structured Domain
-        </div>
-        <div style={{display: 'flex', alignItems: 'center', gap: '4px'}}>
-          <div style={{width: '12px', height: '12px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.05)'}}></div>
-          Flexible Linker / Disordered
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Compare Modal Component
-const CompareModal = ({ onClose, currentResults }) => {
-  const [compareId, setCompareId] = useState('');
-  const [compareResults, setCompareResults] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-
-  const handleCompare = async () => {
-    if (!compareId) return;
-    setLoading(true);
-    setError('');
-    try {
-      const res = await axios.post("/api/analyze", { 
-        uniprot_id: compareId, 
-        window_size: 9 
-      });
-      setCompareResults(res.data);
-    } catch (err) {
-      setError(extractErrorMessage(err));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="modal-overlay">
-      <div className="modal-content">
-        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px'}}>
-          <h2 style={{margin: 0}}>Protein Comparison Mode</h2>
-          <button className="icon-btn" onClick={onClose}><span className="material-symbols-outlined">close</span></button>
-        </div>
-        
-        {!compareResults ? (
-          <div>
-            <p style={{color: 'var(--on-surface-variant)', marginBottom: '16px'}}>Enter another UniProt ID to compare against {currentResults?.uniprot_id || 'the current protein'}.</p>
-            <div style={{display: 'flex', gap: '8px'}}>
-              <input className="text-input" value={compareId} onChange={e => setCompareId(e.target.value)} placeholder="e.g. P01308" />
-              <button className="btn-primary" onClick={handleCompare} disabled={loading}>{loading ? 'Fetching...' : 'Compare'}</button>
-            </div>
-            {error && <div style={{color: 'var(--error)', marginTop: '8px'}}>{error}</div>}
-          </div>
-        ) : (
-          <div>
-            <div style={{display: 'flex', justifyContent: 'flex-end', marginBottom: '8px'}}>
-              <button className="btn-outline" onClick={() => setCompareResults(null)}>New Comparison</button>
-            </div>
-            <table className="compare-table">
-              <thead>
-                <tr>
-                  <th>Property</th>
-                  <th>{currentResults.protein_name || currentResults.uniprot_id}</th>
-                  <th>{compareResults.protein_name || compareResults.uniprot_id}</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>Molecular Weight</td>
-                  <td>{(currentResults.properties.molecular_weight / 1000).toFixed(1)} kDa</td>
-                  <td>{(compareResults.properties.molecular_weight / 1000).toFixed(1)} kDa</td>
-                </tr>
-                <tr>
-                  <td>Isoelectric Point (pI)</td>
-                  <td>{currentResults.properties.pi.toFixed(2)}</td>
-                  <td>{compareResults.properties.pi.toFixed(2)}</td>
-                </tr>
-                <tr>
-                  <td>GRAVY Score</td>
-                  <td>{currentResults.properties.gravy.toFixed(3)} ({currentResults.properties.classification})</td>
-                  <td>{compareResults.properties.gravy.toFixed(3)} ({compareResults.properties.classification})</td>
-                </tr>
-                <tr>
-                  <td>Stability</td>
-                  <td>{currentResults.stability?.classification || 'Unknown'}</td>
-                  <td>{compareResults.stability?.classification || 'Unknown'}</td>
-                </tr>
-                <tr>
-                  <td>Domains (PAE)</td>
-                  <td>{currentResults.alphafold?.pae?.domains?.length || 0}</td>
-                  <td>{compareResults.alphafold?.pae?.domains?.length || 0}</td>
-                </tr>
-                <tr>
-                  <td>Helices / Sheets</td>
-                  <td>{(currentResults.secondary_structure.helix*100).toFixed(1)}% / {(currentResults.secondary_structure.sheet*100).toFixed(1)}%</td>
-                  <td>{(compareResults.secondary_structure.helix*100).toFixed(1)}% / {(compareResults.secondary_structure.sheet*100).toFixed(1)}%</td>
-                </tr>
-                <tr>
-                  <td>AlphaFold Confidence</td>
-                  <td>{currentResults.alphafold?.plddt?.global ? currentResults.alphafold.plddt.global.toFixed(1) : 'N/A'}</td>
-                  <td>{compareResults.alphafold?.plddt?.global ? compareResults.alphafold.plddt.global.toFixed(1) : 'N/A'}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
 export default function App() {
   const [activeTab, setActiveTab] = useState('molecular'); // 'molecular' | 'sequence'
   const [selectedDomain, setSelectedDomain] = useState(null);
-  const [showCompare, setShowCompare] = useState(false);
   
   const [inputType, setInputType] = useState('uniprot');
   const [inputValue, setInputValue] = useState('');
@@ -344,7 +212,7 @@ export default function App() {
         ? { uniprot_id: valToUse, window_size: parseInt(windowSize) } 
         : { sequence: valToUse, window_size: parseInt(windowSize) };
         
-      const res = await axios.post("/api/analyze", payload);
+      const res = await axios.post("https://fold-sight-analytics-8vs1.vercel.app/api/analyze", payload);
       setResults(res.data);
       setHydroData(res.data.hydrophobicity_plot);
       addToHistory(typeToUse, valToUse);
@@ -361,7 +229,7 @@ export default function App() {
       setActiveTab('molecular');
       setSelectedDomain(null);
     } catch (err) {
-      setError(extractErrorMessage(err));
+      setError(err.response?.data?.detail || 'An error occurred during analysis');
     } finally {
       setLoading(false);
     }
@@ -370,7 +238,7 @@ export default function App() {
   // Real-time silent refetch for hydrophobicity slider
   useEffect(() => {
     if (results && results.sequence) {
-      axios.post("/api/hydrophobicity", {
+      axios.post("https://fold-sight-analytics-8vs1.vercel.app/api/hydrophobicity", {
         sequence: results.sequence,
         window_size: parseInt(windowSize)
       }).then(res => {
@@ -404,10 +272,6 @@ export default function App() {
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-  };
-
-  const handlePrintPDF = () => {
-    window.print();
   };
 
   const renderCharts = () => {
@@ -518,15 +382,6 @@ export default function App() {
     setStyleMode(modes[(currIdx + 1) % modes.length]);
   };
 
-  // Helper for Amino Acid names
-  const aaFullNames = {
-    'A': 'Alanine (A)', 'R': 'Arginine (R)', 'N': 'Asparagine (N)', 'D': 'Aspartic Acid (D)',
-    'C': 'Cysteine (C)', 'Q': 'Glutamine (Q)', 'E': 'Glutamic Acid (E)', 'G': 'Glycine (G)',
-    'H': 'Histidine (H)', 'I': 'Isoleucine (I)', 'L': 'Leucine (L)', 'K': 'Lysine (K)',
-    'M': 'Methionine (M)', 'F': 'Phenylalanine (F)', 'P': 'Proline (P)', 'S': 'Serine (S)',
-    'T': 'Threonine (T)', 'W': 'Tryptophan (W)', 'Y': 'Tyrosine (Y)', 'V': 'Valine (V)'
-  };
-
   return (
     <div className="dashboard-container">
       {/* SideNavBar */}
@@ -628,17 +483,9 @@ export default function App() {
               {results?.uniprot_id ? `Target ID: ${results.uniprot_id}` : 'No Target Selected'}
             </span>
           </div>
-          <div style={{display: 'flex', gap: '12px'}}>
-            <button className="btn-outline" onClick={() => setShowCompare(true)} disabled={!results}>
-              <span className="material-symbols-outlined" style={{fontSize: '16px'}}>compare_arrows</span> Compare
-            </button>
-            <button className="btn-outline" onClick={handlePrintPDF} disabled={!results}>
-              <span className="material-symbols-outlined" style={{fontSize: '16px'}}>picture_as_pdf</span> PDF Report
-            </button>
-            <button className="btn-outline" onClick={exportCSV} disabled={!results}>
-              <span className="material-symbols-outlined" style={{fontSize: '16px'}}>download</span> CSV
-            </button>
-          </div>
+          <button className="btn-outline" onClick={exportCSV} disabled={!results}>
+            <span className="material-symbols-outlined" style={{fontSize: '16px'}}>download</span> Export CSV
+          </button>
         </header>
 
         <main className="main-viewport">
@@ -651,32 +498,20 @@ export default function App() {
           {/* Left Area (Grid, Viewer, Charts, or Sequence Viewer) */}
           <div style={{flex: 1, display: 'flex', flexDirection: 'column', gap: '16px', minWidth: 0}}>
             
-            {/* AI Scientific Summary */}
-            {results?.ai_summary && (
-              <div className="glass-panel" style={{padding: '16px 20px', borderLeft: '4px solid var(--secondary)'}}>
-                <div style={{display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px'}}>
-                  <span className="material-symbols-outlined" style={{color: 'var(--secondary)'}}>auto_awesome</span>
-                  <strong style={{color: 'var(--on-surface)'}}>AI Scientific Interpretation</strong>
-                </div>
-                <div style={{color: 'var(--on-surface-variant)', fontSize: '14px', lineHeight: '1.6'}}>
-                  {results.ai_summary}
-                </div>
-              </div>
-            )}
-            
             {/* Protein Function / Description */}
             {proteinFunction && (
               <div style={{
                  padding: '16px 20px', 
                  backgroundColor: 'rgba(96, 165, 250, 0.05)', 
+                 borderLeft: '4px solid var(--secondary)',
                  borderRadius: '8px',
                  color: 'var(--on-surface)',
                  fontSize: '14px',
                  lineHeight: '1.6',
                  border: '1px solid rgba(255,255,255,0.05)',
-                 borderLeft: '4px solid #3b82f6'
+                 borderLeft: '4px solid var(--secondary)'
               }}>
-                <strong style={{color: '#3b82f6'}}>UniProt Function: </strong> {proteinFunction}
+                <strong style={{color: 'var(--secondary)'}}>About this protein: </strong> {proteinFunction}
               </div>
             )}
             
@@ -704,36 +539,6 @@ export default function App() {
                       <div className="card-stat-title">Sec. Structure</div>
                       <div className="card-stat-value">{(results.secondary_structure.helix*100).toFixed(0)}%</div>
                       <div style={{fontSize: '11px', color: 'var(--on-surface-variant)', marginTop: '4px'}}>Helices ({(results.secondary_structure.sheet*100).toFixed(0)}% Sheets)</div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Stability Report Panel */}
-                {results?.stability && (
-                  <div className="glass-panel" style={{padding: '16px'}}>
-                    <div className="panel-title" style={{marginBottom: '16px'}}>
-                      <h3><span className="material-symbols-outlined">science</span> Protein Stability Report</h3>
-                      <span style={{fontSize: '11px', background: results.stability.classification === 'Stable' ? 'rgba(20, 184, 166, 0.1)' : 'rgba(239, 68, 68, 0.1)', color: results.stability.classification === 'Stable' ? 'var(--secondary)' : 'var(--error)', padding: '4px 8px', borderRadius: '4px', fontWeight: '700'}}>
-                        Status: {results.stability.classification}
-                      </span>
-                    </div>
-                    <div className="grid-2" style={{gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px'}}>
-                      <div>
-                        <div style={{fontSize: '11px', color: 'var(--on-surface-variant)'}}>Instability Index</div>
-                        <div style={{fontSize: '16px', fontWeight: '600', color: 'var(--on-surface)'}}>{results.stability.instability_index.toFixed(1)}</div>
-                      </div>
-                      <div>
-                        <div style={{fontSize: '11px', color: 'var(--on-surface-variant)'}}>Aliphatic Index</div>
-                        <div style={{fontSize: '16px', fontWeight: '600', color: 'var(--on-surface)'}}>{results.stability.aliphatic_index.toFixed(1)}</div>
-                      </div>
-                      <div>
-                        <div style={{fontSize: '11px', color: 'var(--on-surface-variant)'}}>Est. Half-Life</div>
-                        <div style={{fontSize: '16px', fontWeight: '600', color: 'var(--on-surface)'}}>{results.stability.half_life}</div>
-                      </div>
-                      <div>
-                        <div style={{fontSize: '11px', color: 'var(--on-surface-variant)'}}>Solubility</div>
-                        <div style={{fontSize: '16px', fontWeight: '600', color: 'var(--on-surface)'}}>{results.stability.solubility}</div>
-                      </div>
                     </div>
                   </div>
                 )}
@@ -770,55 +575,35 @@ export default function App() {
             ) : (
               <div className="glass-panel" style={{padding: '24px', flex: 1, overflowY: 'auto'}}>
                 <div className="panel-title" style={{marginBottom: '20px'}}>
-                  <h3><span className="material-symbols-outlined">dns</span> Interactive Sequence Viewer</h3>
+                  <h3><span className="material-symbols-outlined">dns</span> Sequence Viewer</h3>
                 </div>
-                
-                {results?.sequence && (
-                  <DomainTrackMap 
-                    sequenceLength={results.sequence.length} 
-                    domains={results.alphafold?.pae?.domains} 
-                  />
+                {results?.sequence ? (
+                  <div style={{
+                    fontFamily: 'JetBrains Mono, monospace', 
+                    fontSize: '14px', 
+                    lineHeight: '1.8', 
+                    letterSpacing: '2px', 
+                    wordBreak: 'break-all',
+                    color: 'var(--on-surface)'
+                  }}>
+                    {results.sequence.split('').map((aa, i) => {
+                      const isHighlighted = selectedDomain && (i + 1) >= selectedDomain[0] && (i + 1) <= selectedDomain[1];
+                      return (
+                        <span key={i} style={{
+                          backgroundColor: isHighlighted ? 'rgba(20, 184, 166, 0.2)' : 'transparent',
+                          color: isHighlighted ? '#14b8a6' : 'inherit',
+                          padding: isHighlighted ? '2px 0' : '0',
+                          borderRadius: '2px',
+                          transition: 'all 0.2s'
+                        }}>
+                          {aa}
+                        </span>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div style={{color: 'var(--on-surface-variant)'}}>No sequence available. Run an analysis.</div>
                 )}
-                
-                <div style={{marginTop: '24px'}}>
-                  {results?.sequence ? (
-                    <div className="sequence-grid">
-                      {results.sequence.split('').map((aa, i) => {
-                        const isHighlighted = selectedDomain && (i + 1) >= selectedDomain[0] && (i + 1) <= selectedDomain[1];
-                        
-                        // Figure out domain for tooltip
-                        let domainLabel = "None / Linker";
-                        if (results.alphafold?.pae?.domains) {
-                          const domIdx = results.alphafold.pae.domains.findIndex(d => (i+1) >= d[0] && (i+1) <= d[1]);
-                          if (domIdx !== -1) domainLabel = `Domain ${domIdx + 1}`;
-                        }
-                        
-                        return (
-                          <div key={i} className="seq-residue" style={{
-                            backgroundColor: isHighlighted ? 'rgba(20, 184, 166, 0.2)' : 'rgba(255,255,255,0.02)',
-                            color: isHighlighted ? '#14b8a6' : 'inherit',
-                            border: isHighlighted ? '1px solid rgba(20, 184, 166, 0.5)' : '1px solid transparent'
-                          }}>
-                            {aa}
-                            <div className="seq-tooltip">
-                              <div className="tooltip-title">Residue {i + 1}</div>
-                              <div className="tooltip-row">
-                                <span className="tooltip-label">Amino Acid:</span>
-                                <span>{aaFullNames[aa] || aa}</span>
-                              </div>
-                              <div className="tooltip-row">
-                                <span className="tooltip-label">Domain:</span>
-                                <span>{domainLabel}</span>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <div style={{color: 'var(--on-surface-variant)'}}>No sequence available. Run an analysis.</div>
-                  )}
-                </div>
               </div>
             )}
           </div>
@@ -915,10 +700,9 @@ export default function App() {
 
             </aside>
           )}
+
         </main>
       </div>
-
-      {showCompare && <CompareModal onClose={() => setShowCompare(false)} currentResults={results} />}
     </div>
   );
 }
