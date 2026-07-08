@@ -82,8 +82,8 @@ const Viewer3D = ({ cifUrl, sequence, styleMode }) => {
       {cifUrl ? (
         <div ref={viewerRef} style={{ width: '100%', flex: 1, position: 'relative' }}></div>
       ) : (
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
-          No 3D structure available. Enter a UniProt ID.
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--on-surface-variant)' }}>
+          No 3D structure available. Run an analysis.
         </div>
       )}
     </div>
@@ -217,7 +217,7 @@ export default function App() {
       datasets: [{
         label: 'Frequency',
         data: Object.values(results.amino_acid_counts),
-        backgroundColor: '#ff7f00',
+        backgroundColor: '#7bd0ff', // secondary
         borderRadius: 4
       }],
     };
@@ -227,8 +227,8 @@ export default function App() {
       datasets: [{
         label: 'Score',
         data: hydroData,
-        borderColor: '#a855f7',
-        backgroundColor: 'rgba(168, 85, 247, 0.1)',
+        borderColor: '#4edea3', // tertiary
+        backgroundColor: 'rgba(78, 222, 163, 0.1)',
         tension: 0.4,
         fill: true,
         pointRadius: 0
@@ -258,8 +258,8 @@ export default function App() {
           }
         },
         scales: {
-            x: { ticks: {color: '#888'}, grid: {color: '#333'} },
-            y: { ticks: {color: '#888'}, grid: {color: '#333'} }
+            x: { ticks: {color: '#909097'}, grid: {color: 'rgba(255,255,255,0.05)'} },
+            y: { ticks: {color: '#909097'}, grid: {color: 'rgba(255,255,255,0.05)'} }
         }
     };
 
@@ -268,182 +268,296 @@ export default function App() {
         maintainAspectRatio: false,
         plugins: { legend: { display: false } },
         scales: {
-            x: { ticks: {color: '#888'}, grid: {color: '#333'} },
-            y: { ticks: {color: '#888'}, grid: {color: '#333'} }
+            x: { ticks: {color: '#909097'}, grid: {color: 'rgba(255,255,255,0.05)'} },
+            y: { ticks: {color: '#909097'}, grid: {color: 'rgba(255,255,255,0.05)'} }
         }
     };
 
     return (
-      <>
-        <div className="card chart-card">
-          <div className="card-title">Amino Acid Composition</div>
-          <div style={{flex: 1, position: 'relative'}}>
+      <div className="grid-2">
+        <div className="glass-panel" style={{padding: '16px'}}>
+          <div className="panel-title">
+            <h3><span className="material-symbols-outlined">bar_chart</span> Amino Acid Comp</h3>
+          </div>
+          <div className="chart-wrapper">
             <Bar data={aaData} options={aaChartOptions} />
           </div>
         </div>
-        <div className="card chart-card">
-          <div className="card-title">Hydrophobicity Profile (Kyte-Doolittle)</div>
-          <div style={{flex: 1, position: 'relative'}}>
+        <div className="glass-panel" style={{padding: '16px'}}>
+          <div className="panel-title">
+            <h3><span className="material-symbols-outlined">timeline</span> Hydrophobicity</h3>
+          </div>
+          <div className="chart-wrapper">
             <Line data={hData} options={hydroChartOptions} />
           </div>
         </div>
-      </>
+      </div>
     );
+  };
+
+  const cycleStyleMode = () => {
+    const modes = ["cartoon", "stick", "sphere", "surface"];
+    const currIdx = modes.indexOf(styleMode);
+    setStyleMode(modes[(currIdx + 1) % modes.length]);
   };
 
   return (
     <div className="dashboard-container">
-      {/* Sidebar Navigation */}
-      <div className="sidebar">
-        <div className="brand">
-          <span>🧬</span> FoldSight Analytics
+      {/* SideNavBar */}
+      <nav className="sidebar">
+        <div className="sidebar-header">
+          <div className="brand-icon">
+            <span className="material-symbols-outlined">science</span>
+          </div>
+          <div className="brand-title">FoldSight</div>
         </div>
         
-        {/* Input Controls */}
-        <div className="sidebar-section">
-          <div className="sidebar-title">New Analysis</div>
-          
-          <div style={{display: 'flex', gap: '0.5rem', marginBottom: '0.5rem'}}>
-             <label style={{fontSize: '0.8rem', color: inputType === 'uniprot' ? 'var(--primary-orange)' : 'var(--text-secondary)'}}>
-               <input type="radio" checked={inputType==='uniprot'} onChange={()=>setInputType('uniprot')} style={{marginRight: '0.2rem'}}/> UniProt
-             </label>
-             <label style={{fontSize: '0.8rem', color: inputType === 'sequence' ? 'var(--primary-orange)' : 'var(--text-secondary)'}}>
-               <input type="radio" checked={inputType==='sequence'} onChange={()=>setInputType('sequence')} style={{marginRight: '0.2rem'}}/> Sequence
-             </label>
-          </div>
-          
-          <input 
-            type="text" 
-            className="sidebar-input"
-            placeholder={inputType === 'uniprot' ? 'e.g. P04637' : 'e.g. MNGTE...'} 
-            value={inputValue} 
-            onChange={e => setInputValue(e.target.value)} 
-          />
-          
-          <label className="file-upload-label">
-            📁 Upload FASTA File
-            <input type="file" accept=".fasta,.txt,.seq" onChange={handleFileUpload} />
-          </label>
-          
-          <button className="btn-run" onClick={() => handleAnalyze()} disabled={loading}>
-            {loading ? 'Analyzing...' : 'Run Analysis 🚀'}
-          </button>
+        <div className="sidebar-nav">
+          <a className="nav-item active">
+            <span className="material-symbols-outlined" style={{marginRight: '12px'}}>analytics</span>
+            <span className="text-label-caps">Molecular Analysis</span>
+          </a>
+          <a className="nav-item">
+            <span className="material-symbols-outlined" style={{marginRight: '12px'}}>dns</span>
+            <span className="text-label-caps">Sequence Viewer</span>
+          </a>
         </div>
-
-        {/* Interactive Parameters */}
-        <div className="sidebar-section">
-          <div className="sidebar-title">Analysis Parameters</div>
-          
-          <div className="slider-container">
-             <label>Hydrophobicity Window <span>{windowSize}</span></label>
-             <input type="range" min="5" max="21" step="2" value={windowSize} onChange={(e) => setWindowSize(e.target.value)} />
-          </div>
-
-          <div style={{display: 'flex', flexDirection: 'column', gap: '0.5rem'}}>
-             <label style={{fontSize: '0.85rem', color: 'var(--text-secondary)'}}>3D View Style</label>
-             <select className="style-select" value={styleMode} onChange={e => setStyleMode(e.target.value)}>
+        
+        <div style={{flex: 1, padding: '24px 8px', display: 'flex', flexDirection: 'column', gap: '16px'}}>
+            <div className="sidebar-section-title">Analysis Setup</div>
+            
+            <div className="radio-group" style={{padding: '0 8px'}}>
+              <label className={`radio-label ${inputType === 'uniprot' ? 'active' : ''}`}>
+                <input type="radio" checked={inputType==='uniprot'} onChange={()=>setInputType('uniprot')}/> UniProt
+              </label>
+              <label className={`radio-label ${inputType === 'sequence' ? 'active' : ''}`}>
+                <input type="radio" checked={inputType==='sequence'} onChange={()=>setInputType('sequence')}/> Sequence
+              </label>
+            </div>
+            
+            <div style={{padding: '0 8px'}}>
+              <input 
+                className="text-input" 
+                placeholder={inputType==='uniprot' ? 'e.g. P04637' : 'e.g. MNGTE...'} 
+                value={inputValue} 
+                onChange={e => setInputValue(e.target.value)} 
+              />
+            </div>
+            
+            <div style={{padding: '0 8px'}}>
+              <label className="file-upload">
+                <span className="material-symbols-outlined" style={{fontSize: '18px', verticalAlign: 'middle', marginRight: '6px'}}>upload_file</span> 
+                Upload FASTA File
+                <input type="file" accept=".fasta,.txt,.seq" onChange={handleFileUpload} />
+              </label>
+            </div>
+            
+            <div style={{padding: '0 8px', display: 'flex', flexDirection: 'column', gap: '8px'}}>
+              <label style={{fontSize: '11px', color: 'var(--on-surface-variant)'}}>3D View Style</label>
+              <select className="text-input" value={styleMode} onChange={e => setStyleMode(e.target.value)} style={{padding: '8px'}}>
                 <option value="cartoon">Cartoon / Ribbon</option>
                 <option value="stick">Ball and Stick</option>
                 <option value="sphere">Space Filling</option>
                 <option value="surface">Molecular Surface</option>
-             </select>
-          </div>
-        </div>
+              </select>
+            </div>
 
-        {/* History */}
-        {history.length > 0 && (
-          <div className="sidebar-section">
-            <div className="sidebar-title">Recent Searches</div>
-            {history.map(h => (
-              <button key={h.id} className="history-item" onClick={() => handleAnalyze(h.type, h.value)}>
-                {h.type === 'uniprot' ? '🆔 ' : '🧬 '}{h.value}
+            <div style={{padding: '0 8px', display: 'flex', flexDirection: 'column', gap: '8px'}}>
+              <label style={{fontSize: '11px', color: 'var(--on-surface-variant)'}}>Hydrophobicity Window: {windowSize}</label>
+              <input type="range" min="5" max="21" step="2" value={windowSize} onChange={e => setWindowSize(e.target.value)} />
+            </div>
+            
+            <div style={{padding: '0 8px', marginTop: 'auto', paddingTop: '24px'}}>
+              <button className="btn-primary" onClick={() => handleAnalyze()} disabled={loading}>
+                <span className="material-symbols-outlined" style={{fontSize: '18px'}}>play_arrow</span>
+                {loading ? 'Analyzing...' : 'Run Analysis'}
               </button>
-            ))}
+            </div>
+        </div>
+        
+        {history.length > 0 && (
+          <div style={{padding: '24px 8px', borderTop: '1px solid rgba(255,255,255,0.05)'}}>
+            <div className="sidebar-section-title">Recent Searches</div>
+            <div className="history-list">
+              {history.map(h => (
+                  <div key={h.id} className="history-item" onClick={() => handleAnalyze(h.type, h.value)}>
+                    <span className="material-symbols-outlined" style={{fontSize: '16px'}}>
+                      {h.type === 'uniprot' ? 'fingerprint' : 'polyline'}
+                    </span>
+                    <span style={{overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>{h.value}</span>
+                  </div>
+              ))}
+            </div>
           </div>
         )}
+      </nav>
 
-        {/* Developer Section */}
-        <div className="sidebar-section dev-portfolio">
-          <div className="sidebar-title" style={{color: 'var(--text-primary)'}}>Developer Portfolio</div>
-          <a href="https://github.com/Ashray16" target="_blank" rel="noreferrer" className="dev-link">
-            <span>👾</span> GitHub Profile
-          </a>
-          <a href="https://linkedin.com/in/ashray-gupta-81312b2aa" target="_blank" rel="noreferrer" className="dev-link">
-            <span>💼</span> LinkedIn Profile
-          </a>
-        </div>
-      </div>
-
-      {/* Main Content Area */}
+      {/* Main Content */}
       <div className="main-content">
-        <div className="top-bar">
-          <div>
-            <h1 className="page-title">{results?.protein_name ? results.protein_name : 'Protein Dashboard'}</h1>
-            <div style={{color: 'var(--text-secondary)', fontSize: '0.9rem'}}>
-               {results?.uniprot_id ? `UniProt ID: ${results.uniprot_id}` : 'At a glance summary of your selected protein.'}
-            </div>
+        <header className="top-bar">
+          <div style={{display: 'flex', alignItems: 'center', gap: '16px'}}>
+            <h2 className="text-headline-md">{results?.protein_name || 'Protein Analysis'}</h2>
+            <div className="divider" style={{height: '16px'}}></div>
+            <span style={{fontSize: '12px', color: 'var(--on-surface-variant)', background: 'var(--surface-container-high)', padding: '4px 8px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.05)'}}>
+              {results?.uniprot_id ? `Target ID: ${results.uniprot_id}` : 'No Target Selected'}
+            </span>
           </div>
-          <button className="btn-secondary" onClick={exportCSV} disabled={!results}>Export Report to CSV</button>
-        </div>
+          <button className="btn-outline" onClick={exportCSV} disabled={!results}>
+            <span className="material-symbols-outlined" style={{fontSize: '16px'}}>download</span> Export CSV
+          </button>
+        </header>
 
-        {error && <div style={{color: '#ff4444', marginBottom: '1.5rem', fontWeight: 600, padding: '1rem', background: 'rgba(255, 68, 68, 0.1)', borderRadius: '8px', border: '1px solid #ff4444'}}>{error}</div>}
+        <main className="main-viewport">
+          {error && (
+            <div style={{position: 'absolute', top: '16px', left: '16px', right: '16px', zIndex: 100}}>
+              <div className="error-banner">{error}</div>
+            </div>
+          )}
 
-        {results ? (
-          <div className="grid-layout">
+          {/* Left Area (Grid, Viewer, Charts) */}
+          <div style={{flex: 1, display: 'flex', flexDirection: 'column', gap: '16px', minWidth: 0}}>
             
-            <div className="card card-small">
-              <div className="card-title">Molecular Weight</div>
-              <div className="card-value">{(results.properties.molecular_weight).toFixed(2)}</div>
-              <div style={{color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '0.5rem'}}>Daltons (Da)</div>
-            </div>
-            
-            <div className="card card-small">
-              <div className="card-title">Isoelectric Point</div>
-              <div className="card-value">{(results.properties.pi).toFixed(2)}</div>
-              <div style={{color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '0.5rem'}}>pH Level</div>
-            </div>
-            
-            <div className="card card-small" style={{
-                borderTop: `4px solid ${results.properties.gravy > 0 ? '#ff7f00' : '#3b82f6'}`, 
-                boxShadow: `0 8px 32px 0 ${results.properties.gravy > 0 ? 'rgba(255, 127, 0, 0.15)' : 'rgba(59, 130, 246, 0.15)'}`
-            }}>
-              <div className="card-title">GRAVY Score</div>
-              <div className="card-value">{results.properties.gravy.toFixed(3)}</div>
-              <div style={{color: results.properties.gravy > 0 ? '#ff7f00' : '#3b82f6', fontWeight: 600, marginTop: '0.5rem'}}>{results.properties.classification}</div>
-            </div>
+            {/* Stats Grid */}
+            {results && (
+              <div className="grid-2" style={{gridTemplateColumns: 'repeat(4, 1fr)'}}>
+                <div className="card-stat">
+                  <div className="card-stat-title">Molecular Weight</div>
+                  <div className="card-stat-value">{(results.properties.molecular_weight / 1000).toFixed(1)}k</div>
+                  <div style={{fontSize: '11px', color: 'var(--on-surface-variant)', marginTop: '4px'}}>Daltons (kDa)</div>
+                </div>
+                <div className="card-stat">
+                  <div className="card-stat-title">Isoelectric Point</div>
+                  <div className="card-stat-value">{results.properties.pi.toFixed(2)}</div>
+                  <div style={{fontSize: '11px', color: 'var(--on-surface-variant)', marginTop: '4px'}}>pH Level</div>
+                </div>
+                <div className="card-stat" style={{borderTop: `2px solid ${results.properties.gravy > 0 ? 'var(--secondary)' : 'var(--tertiary)'}`}}>
+                  <div className="card-stat-title">GRAVY Score</div>
+                  <div className="card-stat-value">{results.properties.gravy.toFixed(3)}</div>
+                  <div style={{fontSize: '11px', color: results.properties.gravy > 0 ? 'var(--secondary)' : 'var(--tertiary)', marginTop: '4px', fontWeight: '600'}}>{results.properties.classification}</div>
+                </div>
+                <div className="card-stat">
+                  <div className="card-stat-title">Sec. Structure</div>
+                  <div className="card-stat-value">{(results.secondary_structure.helix*100).toFixed(0)}%</div>
+                  <div style={{fontSize: '11px', color: 'var(--on-surface-variant)', marginTop: '4px'}}>Helices ({(results.secondary_structure.sheet*100).toFixed(0)}% Sheets)</div>
+                </div>
+              </div>
+            )}
 
-            <div className="card card-small">
-              <div className="card-title">Sec. Structure</div>
-              <div className="card-value">{(results.secondary_structure.helix*100).toFixed(0)}% <span style={{fontSize:'1rem'}}>H</span></div>
-              <div style={{color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '0.5rem'}}>{(results.secondary_structure.sheet*100).toFixed(0)}% Sheets, {(results.secondary_structure.turn*100).toFixed(0)}% Turns</div>
-            </div>
+            {/* 3D Viewer */}
+            <section className="glass-panel viewer-container">
+              <div className="viewer-overlay">
+                {results && (
+                  <div className="status-badge">
+                    <div className="pulse-dot"></div>
+                    <span className="text-label-caps" style={{color: 'var(--on-surface)'}}>Live Render Engine</span>
+                  </div>
+                )}
+              </div>
+              
+              <div style={{flex: 1, backgroundColor: '#010813', position: 'relative'}}>
+                <Viewer3D cifUrl={results?.cif_url} sequence={results?.sequence} styleMode={styleMode} />
+              </div>
+              
+              {results && (
+                <div className="floating-controls">
+                  <button className="icon-btn" title="Cycle Render Style" onClick={cycleStyleMode}>
+                    <span className="material-symbols-outlined">layers</span>
+                  </button>
+                  <div className="divider"></div>
+                  <div className="text-mono" style={{color: 'var(--on-surface)', fontSize: '11px', textTransform: 'uppercase'}}>{styleMode}</div>
+                </div>
+              )}
+            </section>
 
-            <div className="card viewer-card">
-              <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem'}}>
-                <div>
-                  <div className="card-title">3D Structure (AlphaFold)</div>
+            {/* Charts */}
+            {renderCharts()}
+            
+          </div>
+
+          {/* Right Sidebar (Confidence + Domain PAE Inspector) */}
+          {results && (
+            <aside style={{width: '380px', display: 'flex', flexDirection: 'column', gap: '16px', flexShrink: 0}}>
+              
+              {/* Confidence Meter Panel */}
+              <div className="glass-panel" style={{padding: '20px', flexShrink: 0}}>
+                <div className="panel-title" style={{marginBottom: '20px'}}>
+                  <h3><span className="material-symbols-outlined">monitoring</span> Confidence (pLDDT)</h3>
                   {results.alphafold?.plddt && (
-                     <div style={{fontSize: '0.85rem', color: 'var(--text-secondary)'}}>
-                       pLDDT: {results.alphafold.plddt.global.toFixed(1)} — {results.alphafold.plddt.conclusion}
-                     </div>
+                    <span style={{fontSize: '11px', background: 'rgba(123, 208, 255, 0.1)', color: 'var(--secondary)', padding: '4px 8px', borderRadius: '4px', fontWeight: '700'}}>
+                      Avg: {results.alphafold.plddt.global.toFixed(1)}
+                    </span>
+                  )}
+                </div>
+
+                {results.alphafold?.plddt ? (
+                  <div className="confidence-meter">
+                    <div className="meter-row">
+                      <div className="meter-label"><span>High (&gt;90)</span> <span className="text-mono">{(results.alphafold.plddt.vhigh * 100).toFixed(1)}%</span></div>
+                      <div className="meter-track"><div className="meter-fill high" style={{width: `${results.alphafold.plddt.vhigh * 100}%`}}></div></div>
+                    </div>
+                    <div className="meter-row">
+                      <div className="meter-label"><span>Medium (70-90)</span> <span className="text-mono">{(results.alphafold.plddt.conf * 100).toFixed(1)}%</span></div>
+                      <div className="meter-track"><div className="meter-fill med" style={{width: `${results.alphafold.plddt.conf * 100}%`}}></div></div>
+                    </div>
+                    <div className="meter-row">
+                      <div className="meter-label"><span>Low/Disordered (&lt;70)</span> <span className="text-mono" style={{color: 'var(--error)'}}>{((results.alphafold.plddt.low + results.alphafold.plddt.vlow) * 100).toFixed(1)}%</span></div>
+                      <div className="meter-track"><div className="meter-fill low" style={{width: `${(results.alphafold.plddt.low + results.alphafold.plddt.vlow) * 100}%`}}></div></div>
+                    </div>
+                    <div style={{marginTop: '12px', fontSize: '13px', color: 'var(--on-surface-variant)', lineHeight: 1.5, background: 'rgba(0,0,0,0.2)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)'}}>
+                      {results.alphafold.plddt.conclusion}
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{fontSize: '13px', color: 'var(--on-surface-variant)'}}>No AlphaFold confidence data available for this sequence.</div>
+                )}
+              </div>
+
+              {/* Domains / PAE Inspector Panel */}
+              <div className="glass-panel" style={{flex: 1, display: 'flex', flexDirection: 'column', minHeight: '300px'}}>
+                <div style={{padding: '20px', borderBottom: '1px solid rgba(255,255,255,0.05)', backgroundColor: 'rgba(27, 43, 63, 0.3)', borderTopLeftRadius: '12px', borderTopRightRadius: '12px'}}>
+                  <h3 style={{display: 'flex', alignItems: 'center', gap: '8px', margin: 0, fontSize: '18px', fontWeight: '500', color: 'var(--on-surface)'}}>
+                    <span className="material-symbols-outlined" style={{color: 'var(--secondary)'}}>view_agenda</span> Rigid Domains (PAE)
+                  </h3>
+                </div>
+                <div style={{flex: 1, overflowY: 'auto', padding: '12px'}}>
+                  {results.alphafold?.pae ? (
+                    <div style={{display: 'flex', flexDirection: 'column', gap: '8px'}}>
+                      <div style={{fontSize: '13px', color: 'var(--on-surface-variant)', marginBottom: '12px', padding: '0 4px'}}>
+                        {results.alphafold.pae.conclusion}
+                      </div>
+                      
+                      <div style={{display: 'grid', gridTemplateColumns: '1fr 1.5fr 1fr', padding: '8px 16px', fontSize: '11px', textTransform: 'uppercase', color: 'var(--outline)', fontWeight: '700', letterSpacing: '0.05em'}}>
+                         <div>Domain</div>
+                         <div>Residues</div>
+                         <div style={{textAlign: 'right'}}>Length</div>
+                      </div>
+
+                      {results.alphafold.pae.domains.length > 0 ? (
+                        results.alphafold.pae.domains.map((dom, i) => (
+                          <div key={i} className="zebra-row" style={{gridTemplateColumns: '1fr 1.5fr 1fr'}}>
+                            <div style={{color: 'var(--secondary)'}}>Dom {i+1}</div>
+                            <div>{dom[0]} - {dom[1]}</div>
+                            <div style={{textAlign: 'right'}}>{dom[1] - dom[0] + 1} aa</div>
+                          </div>
+                        ))
+                      ) : (
+                        <div style={{padding: '16px', textAlign: 'center', color: 'var(--outline-variant)'}}>
+                          No distinct rigid domains detected.
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div style={{padding: '16px', fontSize: '13px', color: 'var(--on-surface-variant)', textAlign: 'center', marginTop: '20px'}}>
+                      No PAE data available to determine domain boundaries.
+                    </div>
                   )}
                 </div>
               </div>
-              
-              <div style={{flex: 1, background: '#0E1117', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', position: 'relative', overflow: 'hidden'}}>
-                 <Viewer3D cifUrl={results?.cif_url} sequence={results?.sequence} styleMode={styleMode} />
-              </div>
-            </div>
 
-            {renderCharts()}
+            </aside>
+          )}
 
-          </div>
-        ) : (
-          <div className="card" style={{gridColumn: 'span 4', alignItems: 'center', justifyContent: 'center', height: '500px'}}>
-             <h2 style={{color: 'var(--text-primary)', marginBottom: '0.5rem'}}>Welcome to FoldSight Analytics</h2>
-             <p style={{color: 'var(--text-secondary)'}}>Use the controls in the sidebar to upload a FASTA file or enter a UniProt ID.</p>
-          </div>
-        )}
+        </main>
       </div>
     </div>
   );
