@@ -207,12 +207,10 @@ h1, h2, h3, h4, h5, h6 {
   width: 32px;
   height: 32px;
   border-radius: 8px;
-  background: linear-gradient(135deg, var(--secondary), #3b82f6);
+  background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--on-primary);
-  box-shadow: 0 4px 10px rgba(59, 130, 246, 0.2);
 }
 
 .brand-title {
