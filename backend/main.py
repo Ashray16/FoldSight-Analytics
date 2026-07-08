@@ -240,7 +240,7 @@ def analyze_protein(request: Request, req: AnalyzeRequest):
         gravy = analysis.gravy()
         sec_struct = analysis.secondary_structure_fraction()
         aa_counts = analysis.count_amino_acids()
-        aa_percent = analysis.get_amino_acids_percent()
+        aa_percent = analysis.amino_acids_percent
         
         # Stability metrics
         try:
