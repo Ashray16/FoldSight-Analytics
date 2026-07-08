@@ -9,9 +9,18 @@ import './index.css';
 ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend, Filler);
 
 const Logo = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M4 12C4 7.58172 7.58172 4 12 4C16.4183 4 20 7.58172 20 12C20 16.4183 16.4183 20 12 20C7.58172 20 4 16.4183 4 12Z" stroke="currentColor" strokeWidth="2"/>
-    <path d="M8 12C8 14.2091 9.79086 16 12 16C14.2091 16 16 14.2091 16 12C16 9.79086 14.2091 8 12 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M2 15c6.667-6 13.333 0 20-6" />
+    <path d="M9 22c1.798-1.998 2.518-3.995 2.808-5.993" />
+    <path d="M15 2c-1.798 1.998-2.518 3.995-2.808 5.993" />
+    <path d="m17 6-2.5-2.5" />
+    <path d="m14 8-1-1" />
+    <path d="m7 18 2.5 2.5" />
+    <path d="m3.5 14.5.5.5" />
+    <path d="m20 9 .5.5" />
+    <path d="m6.5 12.5 1 1" />
+    <path d="m16.5 10.5 1 1" />
+    <path d="m10 16 1.5 1.5" />
   </svg>
 );
 
