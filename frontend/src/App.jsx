@@ -4,6 +4,12 @@ import {
   Chart as ChartJS, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend, Filler
 } from 'chart.js';
 import { Bar, Line } from 'react-chartjs-2';
+import StabilityReport from './components/StabilityReport';
+import AIInterpretation from './components/AIInterpretation';
+import DomainVisualizer from './components/DomainVisualizer';
+import InteractiveSequence from './components/InteractiveSequence';
+import ComparisonMode from './components/ComparisonMode';
+import PDFExport from './components/PDFExport';
 import './index.css';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend, Filler);
@@ -136,6 +142,9 @@ export default function App() {
   
   const [styleMode, setStyleMode] = useState('cartoon');
   const [windowSize, setWindowSize] = useState(9);
+  
+  const [showCompare, setShowCompare] = useState(false);
+  const dashboardRef = useRef(null);
   
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState(null);
@@ -487,12 +496,20 @@ export default function App() {
               {results?.uniprot_id ? `Target ID: ${results.uniprot_id}` : 'No Target Selected'}
             </span>
           </div>
-          <button className="btn-outline" onClick={exportCSV} disabled={!results}>
-            <span className="material-symbols-outlined" style={{fontSize: '16px'}}>download</span> Export CSV
-          </button>
+          <div style={{display: 'flex', gap: '8px'}}>
+            {results && (
+              <button className="btn-outline" onClick={() => setShowCompare(true)}>
+                <span className="material-symbols-outlined" style={{fontSize: '16px'}}>compare_arrows</span> Compare
+              </button>
+            )}
+            <button className="btn-outline" onClick={exportCSV} disabled={!results}>
+              <span className="material-symbols-outlined" style={{fontSize: '16px'}}>download</span> CSV
+            </button>
+            <PDFExport targetRef={dashboardRef} filename={`${results?.uniprot_id || 'protein'}_report.pdf`} />
+          </div>
         </header>
 
-        <main className="main-viewport">
+        <main className="main-viewport" ref={dashboardRef}>
           {error && (
             <div style={{position: 'absolute', top: '16px', left: '16px', right: '16px', zIndex: 100}}>
               <div className="error-banner">{error}</div>
@@ -521,6 +538,8 @@ export default function App() {
             
             {activeTab === 'molecular' ? (
               <>
+                <AIInterpretation summary={results?.scientific_summary} />
+                
                 {/* Stats Grid */}
                 {results && (
                   <div className="grid-2" style={{gridTemplateColumns: 'repeat(4, 1fr)'}}>
@@ -546,6 +565,10 @@ export default function App() {
                     </div>
                   </div>
                 )}
+
+                {results && <StabilityReport properties={results.properties} />}
+                
+                {results && <DomainVisualizer domains={results.alphafold?.pae?.domains} sequenceLength={results.properties?.length} />}
 
                 {/* 3D Viewer */}
                 <section className="glass-panel viewer-container">
@@ -577,36 +600,15 @@ export default function App() {
                 {renderCharts()}
               </>
             ) : (
-              <div className="glass-panel" style={{padding: '24px', flex: 1, overflowY: 'auto'}}>
-                <div className="panel-title" style={{marginBottom: '20px'}}>
-                  <h3><span className="material-symbols-outlined">dns</span> Sequence Viewer</h3>
-                </div>
+              <div style={{flex: 1, overflowY: 'auto'}}>
                 {results?.sequence ? (
-                  <div style={{
-                    fontFamily: 'JetBrains Mono, monospace', 
-                    fontSize: '14px', 
-                    lineHeight: '1.8', 
-                    letterSpacing: '2px', 
-                    wordBreak: 'break-all',
-                    color: 'var(--on-surface)'
-                  }}>
-                    {results.sequence.split('').map((aa, i) => {
-                      const isHighlighted = selectedDomain && (i + 1) >= selectedDomain[0] && (i + 1) <= selectedDomain[1];
-                      return (
-                        <span key={i} style={{
-                          backgroundColor: isHighlighted ? 'rgba(20, 184, 166, 0.2)' : 'transparent',
-                          color: isHighlighted ? '#14b8a6' : 'inherit',
-                          padding: isHighlighted ? '2px 0' : '0',
-                          borderRadius: '2px',
-                          transition: 'all 0.2s'
-                        }}>
-                          {aa}
-                        </span>
-                      );
-                    })}
-                  </div>
+                  <InteractiveSequence 
+                    sequence={results.sequence} 
+                    domains={results.alphafold?.pae?.domains} 
+                    cifUrl={results.cif_url} 
+                  />
                 ) : (
-                  <div style={{color: 'var(--on-surface-variant)'}}>No sequence available. Run an analysis.</div>
+                  <div style={{color: 'var(--on-surface-variant)', padding: '24px'}}>No sequence available. Run an analysis.</div>
                 )}
               </div>
             )}
@@ -704,9 +706,12 @@ export default function App() {
 
             </aside>
           )}
-
         </main>
       </div>
+      
+      {showCompare && results && (
+        <ComparisonMode baseResults={results} onClose={() => setShowCompare(false)} />
+      )}
     </div>
   );
 }

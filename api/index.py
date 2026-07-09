@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
 from Bio.SeqUtils.ProtParam import ProteinAnalysis
 import requests
+from ai_engine import get_half_life, predict_solubility, generate_scientific_summary
 
 load_dotenv()
 
@@ -236,22 +237,49 @@ def analyze_protein(request: Request, req: AnalyzeRequest):
         gravy = analysis.gravy()
         sec_struct = analysis.secondary_structure_fraction()
         aa_counts = analysis.count_amino_acids()
+        
+        instability = analysis.instability_index()
+        extinction_dict = analysis.molar_extinction_coefficient()
+        aliphatic_index = (aa_counts.get('A', 0) + 2.9 * aa_counts.get('V', 0) + 3.9 * (aa_counts.get('I', 0) + aa_counts.get('L', 0))) / len(sequence) * 100
+        
+        half_life = get_half_life(sequence)
+        solubility = predict_solubility(gravy, pi)
+        
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error analyzing sequence: {str(e)}")
         
     hydro_plot = get_hydrophobicity_plot(sequence, req.window_size)
+    
+    properties_dict = {
+        "length": len(sequence),
+        "molecular_weight": molecular_weight,
+        "pi": pi,
+        "gravy": gravy,
+        "classification": "Hydrophobic (Membrane)" if gravy > 0 else "Hydrophilic (Globular)",
+        "instability_index": instability,
+        "aliphatic_index": aliphatic_index,
+        "extinction_coefficient": {
+            "reduced": extinction_dict[0],
+            "oxidized": extinction_dict[1]
+        },
+        "half_life": half_life,
+        "solubility": solubility,
+        "stability": "Stable" if instability < 40 else "Unstable"
+    }
+    
+    alphafold_dict = {
+        "plddt": plddt_result,
+        "pae": pae_data_result
+    }
+    
+    scientific_summary = generate_scientific_summary(properties_dict, alphafold_dict)
 
     return {
         "sequence": sequence,
         "uniprot_id": uniprot_id,
         "protein_name": protein_name,
         "cif_url": cif_url,
-        "properties": {
-            "molecular_weight": molecular_weight,
-            "pi": pi,
-            "gravy": gravy,
-            "classification": "Hydrophobic (Membrane)" if gravy > 0 else "Hydrophilic (Globular)"
-        },
+        "properties": properties_dict,
         "secondary_structure": {
             "helix": sec_struct[0],
             "turn": sec_struct[1],
@@ -259,8 +287,6 @@ def analyze_protein(request: Request, req: AnalyzeRequest):
         },
         "amino_acid_counts": aa_counts,
         "hydrophobicity_plot": hydro_plot,
-        "alphafold": {
-            "plddt": plddt_result,
-            "pae": pae_data_result
-        }
+        "alphafold": alphafold_dict,
+        "scientific_summary": scientific_summary
     }
