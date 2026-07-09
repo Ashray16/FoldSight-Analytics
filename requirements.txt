@@ -4,3 +4,9 @@ matplotlib
 seaborn
 pandas
 requests
+fastapi
+uvicorn
+biopython
+requests
+pydantic
+python-dotenv
