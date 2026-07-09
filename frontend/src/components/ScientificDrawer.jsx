@@ -6,12 +6,20 @@ export default function ScientificDrawer({ results, onClose }) {
 
   const { properties, alphafold, scientific_summary } = results;
   
+  const domainColors = [
+    'bg-indigo-500 border-indigo-400',
+    'bg-teal-500 border-teal-400',
+    'bg-amber-500 border-amber-400',
+    'bg-rose-500 border-rose-400',
+    'bg-purple-500 border-purple-400'
+  ];
+
   // Format the sequence domains bar
   const renderDomainBar = () => {
     if (!alphafold?.pae?.domains || alphafold.pae.domains.length === 0) {
       return (
-        <div className="w-full bg-slate-800 h-4 rounded mt-2 border border-slate-700 overflow-hidden relative">
-          <div className="absolute inset-0 bg-slate-700 opacity-50 pattern-diagonal-lines"></div>
+        <div className="w-full bg-slate-800/50 h-[2px] rounded mt-6 mb-2 border-y border-slate-700/30 overflow-hidden relative">
+          <div className="absolute inset-0 bg-slate-700 opacity-20 pattern-diagonal-lines"></div>
         </div>
       );
     }
@@ -19,15 +27,23 @@ export default function ScientificDrawer({ results, onClose }) {
     const seqLen = properties.length;
     
     return (
-      <div className="relative w-full h-8 bg-slate-800 rounded-md mt-6 mb-2 border border-slate-700 overflow-hidden flex items-center group">
-        <div className="absolute inset-0 top-1/2 h-[2px] bg-slate-600 -translate-y-1/2"></div>
+      <div className="relative w-full h-12 mt-6 mb-2 flex items-center group">
+        {/* Sequence Base Line */}
+        <div className="absolute left-0 right-0 h-[2px] bg-slate-600 rounded-full"></div>
+        
+        {/* Termini Markers */}
+        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-3 bg-slate-500"></div>
+        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[2px] h-3 bg-slate-500"></div>
+
+        {/* Domains */}
         {alphafold.pae.domains.map((dom, i) => {
           const startPct = (dom[0] / seqLen) * 100;
           const widthPct = ((dom[1] - dom[0]) / seqLen) * 100;
+          const colorClass = domainColors[i % domainColors.length];
           return (
             <div 
               key={i}
-              className="absolute h-full bg-blue-600 border-x border-blue-400/50 hover:bg-blue-500 transition-colors"
+              className={`absolute top-1/2 -translate-y-1/2 h-6 rounded-md border shadow-lg opacity-90 hover:opacity-100 hover:scale-y-110 transition-all cursor-pointer ${colorClass}`}
               style={{ left: `${startPct}%`, width: `${widthPct}%` }}
               title={`Domain ${i+1}: ${dom[0]}-${dom[1]}`}
             />
@@ -170,9 +186,9 @@ export default function ScientificDrawer({ results, onClose }) {
             {renderDomainBar()}
             <div className="mt-4 flex flex-col gap-2">
                {alphafold?.pae?.domains && alphafold.pae.domains.map((dom, i) => (
-                  <div key={i} className="flex items-center gap-2 text-[14px]">
-                     <div className="w-3 h-3 bg-blue-600 rounded-sm"></div>
-                     <span className="text-slate-300 font-medium">Domain {i+1}</span>
+                  <div key={i} className="flex items-center gap-3 text-[14px]">
+                     <div className={`w-3 h-3 rounded-sm border ${domainColors[i % domainColors.length]}`}></div>
+                     <span className="text-slate-200 font-medium">Domain {i+1}</span>
                      <span className="text-slate-500 font-mono text-[12px]">({dom[0]}–{dom[1]})</span>
                      <span className="text-slate-400 ml-2">Structured Region</span>
                   </div>
