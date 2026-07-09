@@ -31,7 +31,7 @@ class HydroRequest(BaseModel):
     sequence: str = Field(..., max_length=10000, pattern=r"^[A-Za-z\s]+$")
     window_size: int = Field(9, ge=3, le=41)
 
-@app.post("/hydrophobicity")
+@app.post("/api/hydrophobicity")
 def calculate_hydrophobicity(request: Request, req: HydroRequest):
     if not req.sequence:
         raise HTTPException(status_code=400, detail="Empty sequence")
@@ -172,7 +172,7 @@ def analyze_pae(pae_data):
         "conclusion": conclusion
     }
 
-@app.post("/analyze")
+@app.post("/api/analyze")
 def analyze_protein(request: Request, req: AnalyzeRequest):
     sequence = ""
     uniprot_id = req.uniprot_id
