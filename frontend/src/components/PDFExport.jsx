@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 import { Loader2 } from 'lucide-react';
-import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
 
 export default function PDFExport({ results, filename, viewerInstance }) {
   const [isExporting, setIsExporting] = useState(false);
@@ -15,8 +13,14 @@ export default function PDFExport({ results, filename, viewerInstance }) {
     setIsExporting(true);
 
     // Let the UI update before generating PDF
-    setTimeout(() => {
+    setTimeout(async () => {
       try {
+        const { jsPDF } = await import('jspdf');
+        
+        // Dynamically import autotable and attach it
+        const autoTableModule = await import('jspdf-autotable');
+        const autoTable = autoTableModule.default || autoTableModule;
+
         const doc = new jsPDF();
         const pageWidth = doc.internal.pageSize.width;
         
@@ -95,7 +99,7 @@ export default function PDFExport({ results, filename, viewerInstance }) {
             ['In Vitro Half-Life', results.properties.half_life || 'N/A']
           ];
 
-          doc.autoTable({
+          autoTable(doc, {
             startY: currentY + 5,
             head: [['Metric', 'Value']],
             body: propsData,
