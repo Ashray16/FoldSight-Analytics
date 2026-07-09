@@ -12,7 +12,7 @@ import ComparisonMode from './components/ComparisonMode';
 import PDFExport from './components/PDFExport';
 import StatusBadge from './components/StatusBadge';
 import ConfidenceGauge from './components/ConfidenceGauge';
-import KeyInsights from './components/KeyInsights';
+import SummaryOfFindings from './components/SummaryOfFindings';
 import './index.css';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend, Filler);
@@ -545,17 +545,16 @@ export default function App() {
             )}
             
             {activeTab === 'molecular' ? (
-              <>
-                <AIInterpretation summary={results?.scientific_summary} />
-                
-                {/* Top Row: Insights & Gauge */}
+              <div className="flex flex-col gap-8">
+                {/* Interpretation and Summary Row */}
                 {results && (
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-                    <div className="lg:col-span-8">
-                      <KeyInsights properties={results.properties} alphafold={results.alphafold} />
-                    </div>
-                    <div className="lg:col-span-4 bg-[#0f172a] rounded-xl border border-slate-800 flex items-center justify-center">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div className="flex flex-col">
+                      <AIInterpretation summary={results?.scientific_summary} />
                       <ConfidenceGauge score={results.alphafold?.plddt?.global} />
+                    </div>
+                    <div>
+                      <SummaryOfFindings properties={results.properties} alphafold={results.alphafold} />
                     </div>
                   </div>
                 )}
@@ -618,7 +617,7 @@ export default function App() {
 
                 {/* Charts */}
                 {renderCharts()}
-              </>
+              </div>
             ) : (
               <div style={{flex: 1, overflowY: 'auto'}}>
                 {results?.sequence ? (

@@ -2,60 +2,34 @@ import React from 'react';
 
 export default function ConfidenceGauge({ score }) {
   if (score === undefined || score === null) return null;
-  
-  const percentage = Math.min(Math.max(score, 0), 100);
-  const radius = 36;
-  const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (percentage / 100) * circumference;
 
-  let color = "#ef4444"; // red-500
-  let label = "Low Confidence";
-  
-  if (percentage >= 90) {
-    color = "#10b981"; // emerald-500
-    label = "High Confidence";
-  } else if (percentage >= 70) {
-    color = "#3b82f6"; // blue-500
-    label = "Confident";
-  } else if (percentage >= 50) {
-    color = "#f59e0b"; // amber-500
-    label = "Moderate";
-  }
+  // Determine color based on pLDDT score
+  let colorClass = 'bg-blue-500';
+  if (score >= 90) colorClass = 'bg-blue-400';
+  else if (score >= 70) colorClass = 'bg-teal-400';
+  else if (score >= 50) colorClass = 'bg-amber-400';
+  else colorClass = 'bg-red-400';
 
   return (
-    <div className="flex flex-col items-center justify-center p-4">
-      <div className="relative flex items-center justify-center">
-        {/* Background circle */}
-        <svg className="transform -rotate-90 w-24 h-24">
-          <circle
-            cx="48"
-            cy="48"
-            r={radius}
-            stroke="currentColor"
-            strokeWidth="8"
-            fill="transparent"
-            className="text-slate-800"
-          />
-          {/* Progress circle */}
-          <circle
-            cx="48"
-            cy="48"
-            r={radius}
-            stroke={color}
-            strokeWidth="8"
-            fill="transparent"
-            strokeDasharray={circumference}
-            strokeDashoffset={strokeDashoffset}
-            strokeLinecap="round"
-            className="transition-all duration-1000 ease-out"
-          />
-        </svg>
-        <div className="absolute flex flex-col items-center justify-center">
-          <span className="text-2xl font-bold text-slate-100">{percentage.toFixed(0)}%</span>
-        </div>
+    <div className="w-full mt-8">
+      <div className="flex justify-between items-end mb-2">
+        <span className="text-sm font-bold text-slate-300 uppercase tracking-widest">Overall Structural Confidence</span>
+        <span className="text-2xl font-mono text-slate-100">{score.toFixed(1)}%</span>
       </div>
-      <span className="mt-2 text-sm font-medium" style={{ color }}>{label}</span>
-      <span className="text-xs text-slate-500 uppercase tracking-wider font-bold mt-1">AlphaFold pLDDT</span>
+      <div className="w-full bg-slate-800/80 h-3 rounded-full overflow-hidden border border-slate-700/50">
+        <div 
+          className={`h-full ${colorClass} rounded-full transition-all duration-1000 ease-out`}
+          style={{ width: `${score}%` }}
+        />
+      </div>
+      <div className="flex justify-between text-[10px] text-slate-500 font-mono uppercase mt-2 px-1">
+        <span>0</span>
+        <span>Very Low</span>
+        <span>Low</span>
+        <span>Confident</span>
+        <span>High</span>
+        <span>100</span>
+      </div>
     </div>
   );
 }

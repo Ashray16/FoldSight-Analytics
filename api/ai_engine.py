@@ -29,19 +29,19 @@ def generate_scientific_summary(properties: dict, afdb_data: dict) -> str:
     gravy = properties.get("gravy", 0.0)
     instability = properties.get("instability_index", 0.0)
     
-    summary = f"This protein is a {seq_len}-residue macromolecule with a molecular weight of approximately {mw:.1f} kDa and an isoelectric point (pI) of {pi:.2f}. "
+    summary = f"The analyzed protein consists of {seq_len} amino acid residues with a calculated molecular weight of {mw:.1f} kDa and an isoelectric point (pI) of {pi:.2f}. "
     
     if gravy > 0.2:
-        summary += f"It exhibits a positive GRAVY score ({gravy:.2f}), indicating significant hydrophobic characteristics that are strongly consistent with membrane-associated or transmembrane proteins. "
+        summary += f"The positive GRAVY score ({gravy:.2f}) indicates an overall hydrophobic character, suggesting a probable membrane-associated or transmembrane localization. "
     elif gravy < -0.2:
-        summary += f"It exhibits a negative GRAVY score ({gravy:.2f}), suggesting a highly hydrophilic nature typical of soluble, cytosolic proteins. "
+        summary += f"The negative GRAVY score ({gravy:.2f}) indicates an overall hydrophilic character, suggesting a soluble protein under physiological conditions. "
     else:
-        summary += f"The near-neutral GRAVY score ({gravy:.2f}) suggests a balanced amphipathic character, typical of globular proteins. "
+        summary += f"The near-neutral GRAVY score ({gravy:.2f}) points to an amphipathic character typically associated with globular proteins. "
         
     if instability < 40:
-        summary += f"With an instability index of {instability:.1f}, the protein is predicted to be structurally stable in vitro. "
+        summary += f"An instability index of {instability:.1f} predicts the protein maintains structural stability in vitro. "
     else:
-        summary += f"The elevated instability index of {instability:.1f} indicates that the protein may be prone to rapid degradation or instability in vitro. "
+        summary += f"An instability index of {instability:.1f} suggests limited intrinsic stability in vitro, indicating it may be prone to rapid degradation. "
         
     if afdb_data and afdb_data.get("plddt"):
         plddt = afdb_data["plddt"]
@@ -49,20 +49,20 @@ def generate_scientific_summary(properties: dict, afdb_data: dict) -> str:
         vlow = plddt.get("vlow", 0)
         
         if conf > 80:
-            summary += f"AlphaFold predicts the tertiary structure with high overall confidence (average pLDDT {conf:.1f}), suggesting a well-defined native fold. "
+            summary += f"AlphaFold confidence scores (average pLDDT = {conf:.1f}) indicate a highly reliable tertiary structure with a predominantly ordered conformation. "
         elif conf > 60:
-            summary += f"AlphaFold predicts the structure with moderate confidence (average pLDDT {conf:.1f}), which may reflect some conformational flexibility. "
+            summary += f"AlphaFold predicts the structure with moderate confidence (average pLDDT = {conf:.1f}), reflecting potential conformational flexibility in certain domains. "
         else:
-            summary += f"The low overall AlphaFold confidence (average pLDDT {conf:.1f}) strongly implies that the sequence may be intrinsically disordered or lacks a stable tertiary structure in isolation. "
+            summary += f"The low overall AlphaFold confidence (average pLDDT = {conf:.1f}) strongly implies a high degree of intrinsic disorder or a lack of stable tertiary structure in isolation. "
             
         if vlow > 0.2:
-            summary += f"Notably, {(vlow*100):.1f}% of the sequence is predicted with very low confidence, which often corresponds to functionally important intrinsically disordered regions (IDRs) or flexible linkers."
+            summary += f"Importantly, a substantial portion ({(vlow*100):.1f}%) of the sequence is predicted with very low confidence, corresponding to putative intrinsically disordered regions (IDRs). "
             
     if afdb_data and afdb_data.get("pae"):
         domains = afdb_data["pae"].get("domains", [])
         if len(domains) > 1:
-            summary += f" Furthermore, Predicted Aligned Error (PAE) analysis reveals a multi-domain architecture consisting of {len(domains)} distinct structural domains separated by inter-domain joints."
+            summary += f"Domain analysis based on Predicted Aligned Error (PAE) supports a multi-domain structural organization comprising {len(domains)} distinct rigid bodies."
         elif len(domains) == 1:
-            summary += " PAE analysis indicates a single, rigidly folded composite domain architecture."
+            summary += "Domain analysis based on Predicted Aligned Error (PAE) supports a compact, single-domain structural organization."
             
-    return summary
+    return summary.strip()
