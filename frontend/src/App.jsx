@@ -4,15 +4,11 @@ import {
   Chart as ChartJS, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend, Filler
 } from 'chart.js';
 import { Bar, Line } from 'react-chartjs-2';
-import StabilityReport from './components/StabilityReport';
-import AIInterpretation from './components/AIInterpretation';
-import DomainVisualizer from './components/DomainVisualizer';
 import InteractiveSequence from './components/InteractiveSequence';
 import ComparisonMode from './components/ComparisonMode';
+import ScientificDrawer from './components/ScientificDrawer';
 import PDFExport from './components/PDFExport';
 import StatusBadge from './components/StatusBadge';
-import ConfidenceGauge from './components/ConfidenceGauge';
-import SummaryOfFindings from './components/SummaryOfFindings';
 import './index.css';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend, Filler);
@@ -147,6 +143,7 @@ export default function App() {
   const [windowSize, setWindowSize] = useState(9);
   
   const [showCompare, setShowCompare] = useState(false);
+  const [showScientific, setShowScientific] = useState(false);
   const dashboardRef = useRef(null);
   
   const [loading, setLoading] = useState(false);
@@ -506,9 +503,14 @@ export default function App() {
           </div>
           <div style={{display: 'flex', gap: '8px'}}>
             {results && (
-              <button className="btn-outline" onClick={() => setShowCompare(true)}>
-                <span className="material-symbols-outlined" style={{fontSize: '16px'}}>compare_arrows</span> Compare
-              </button>
+              <>
+                <button className="btn-outline" onClick={() => setShowScientific(true)}>
+                  <span className="material-symbols-outlined" style={{fontSize: '16px'}}>science</span> Interpretation
+                </button>
+                <button className="btn-outline" onClick={() => setShowCompare(true)}>
+                  <span className="material-symbols-outlined" style={{fontSize: '16px'}}>compare_arrows</span> Compare
+                </button>
+              </>
             )}
             <button className="btn-outline" onClick={exportCSV} disabled={!results}>
               <span className="material-symbols-outlined" style={{fontSize: '16px'}}>download</span> CSV
@@ -546,19 +548,6 @@ export default function App() {
             
             {activeTab === 'molecular' ? (
               <div className="flex flex-col gap-8">
-                {/* Interpretation and Summary Row */}
-                {results && (
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <div className="flex flex-col">
-                      <AIInterpretation summary={results?.scientific_summary} />
-                      <ConfidenceGauge score={results.alphafold?.plddt?.global} />
-                    </div>
-                    <div>
-                      <SummaryOfFindings properties={results.properties} alphafold={results.alphafold} />
-                    </div>
-                  </div>
-                )}
-
                 {/* Stats Grid */}
                 {results && (
                   <div className="grid-2" style={{gridTemplateColumns: 'repeat(4, 1fr)'}}>
@@ -611,10 +600,6 @@ export default function App() {
                   )}
                 </section>
 
-                {results && <StabilityReport properties={results.properties} />}
-                
-                {results && <DomainVisualizer domains={results.alphafold?.pae?.domains} sequenceLength={results.properties?.length} />}
-
                 {/* Charts */}
                 {renderCharts()}
               </div>
@@ -633,43 +618,9 @@ export default function App() {
             )}
           </div>
 
-          {/* Right Sidebar (Confidence + Domain PAE Inspector) */}
+          {/* Right Sidebar (PAE Inspector) */}
           {results && (
             <aside style={{width: '380px', display: 'flex', flexDirection: 'column', gap: '16px', flexShrink: 0}}>
-              
-              {/* Confidence Meter Panel */}
-              <div className="glass-panel" style={{padding: '20px', flexShrink: 0}}>
-                <div className="panel-title" style={{marginBottom: '20px'}}>
-                  <h3><span className="material-symbols-outlined">monitoring</span> Confidence (pLDDT)</h3>
-                  {results.alphafold?.plddt && (
-                    <span style={{fontSize: '11px', background: 'rgba(59, 130, 246, 0.1)', color: 'var(--secondary)', padding: '4px 8px', borderRadius: '4px', fontWeight: '700'}}>
-                      Avg: {results.alphafold.plddt.global.toFixed(1)}
-                    </span>
-                  )}
-                </div>
-
-                {results.alphafold?.plddt ? (
-                  <div className="confidence-meter">
-                    <div className="meter-row">
-                      <div className="meter-label"><span>High (&gt;90)</span> <span className="text-mono">{(results.alphafold.plddt.vhigh * 100).toFixed(1)}%</span></div>
-                      <div className="meter-track"><div className="meter-fill high" style={{width: `${results.alphafold.plddt.vhigh * 100}%`}}></div></div>
-                    </div>
-                    <div className="meter-row">
-                      <div className="meter-label"><span>Medium (70-90)</span> <span className="text-mono">{(results.alphafold.plddt.conf * 100).toFixed(1)}%</span></div>
-                      <div className="meter-track"><div className="meter-fill med" style={{width: `${results.alphafold.plddt.conf * 100}%`}}></div></div>
-                    </div>
-                    <div className="meter-row">
-                      <div className="meter-label"><span>Low/Disordered (&lt;70)</span> <span className="text-mono" style={{color: 'var(--error)'}}>{((results.alphafold.plddt.low + results.alphafold.plddt.vlow) * 100).toFixed(1)}%</span></div>
-                      <div className="meter-track"><div className="meter-fill low" style={{width: `${(results.alphafold.plddt.low + results.alphafold.plddt.vlow) * 100}%`}}></div></div>
-                    </div>
-                    <div style={{marginTop: '12px', fontSize: '13px', color: 'var(--on-surface-variant)', lineHeight: 1.5, background: 'rgba(0,0,0,0.2)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)'}}>
-                      {results.alphafold.plddt.conclusion}
-                    </div>
-                  </div>
-                ) : (
-                  <div style={{fontSize: '13px', color: 'var(--on-surface-variant)'}}>No AlphaFold confidence data available for this sequence.</div>
-                )}
-              </div>
 
               {/* Domains / PAE Inspector Panel */}
               <div className="glass-panel" style={{flex: 1, display: 'flex', flexDirection: 'column', minHeight: '300px'}}>
@@ -730,6 +681,10 @@ export default function App() {
       
       {showCompare && results && (
         <ComparisonMode baseResults={results} onClose={() => setShowCompare(false)} />
+      )}
+      
+      {showScientific && results && (
+        <ScientificDrawer results={results} onClose={() => setShowScientific(false)} />
       )}
     </div>
   );

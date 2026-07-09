@@ -21,48 +21,60 @@ def predict_solubility(gravy: float, pi: float, is_membrane: bool = False) -> st
     else:
         return "Moderate (Globular / Mixed)"
 
-def generate_scientific_summary(properties: dict, afdb_data: dict) -> str:
-    """Generates a cohesive research paragraph based on protein metrics."""
+def generate_scientific_summary(properties: dict, afdb_data: dict) -> dict:
+    """Generates cohesive research paragraphs separated into sections based on protein metrics."""
     seq_len = properties.get("length", 0)
     mw = properties.get("molecular_weight", 0) / 1000  # kDa
     pi = properties.get("pi", 7.0)
     gravy = properties.get("gravy", 0.0)
     instability = properties.get("instability_index", 0.0)
     
-    summary = f"The analyzed protein consists of {seq_len} amino acid residues with a calculated molecular weight of {mw:.1f} kDa and an isoelectric point (pI) of {pi:.2f}. "
+    # 1. Overview
+    overview = f"The analyzed protein consists of {seq_len} amino acid residues with a calculated molecular weight of {mw:.1f} kDa and an isoelectric point (pI) of {pi:.2f}."
     
+    # 2. Biological Interpretation
+    bio = ""
     if gravy > 0.2:
-        summary += f"The positive GRAVY score ({gravy:.2f}) indicates an overall hydrophobic character, suggesting a probable membrane-associated or transmembrane localization. "
+        bio += f"The positive GRAVY score ({gravy:.2f}) indicates an overall hydrophobic character, suggesting a probable membrane-associated or transmembrane localization. "
     elif gravy < -0.2:
-        summary += f"The negative GRAVY score ({gravy:.2f}) indicates an overall hydrophilic character, suggesting a soluble protein under physiological conditions. "
+        bio += f"The negative GRAVY score ({gravy:.2f}) indicates an overall hydrophilic character, suggesting a soluble protein under physiological conditions. "
     else:
-        summary += f"The near-neutral GRAVY score ({gravy:.2f}) points to an amphipathic character typically associated with globular proteins. "
+        bio += f"The near-neutral GRAVY score ({gravy:.2f}) points to an amphipathic character typically associated with globular proteins. "
         
     if instability < 40:
-        summary += f"An instability index of {instability:.1f} predicts the protein maintains structural stability in vitro. "
+        bio += f"An instability index of {instability:.1f} predicts the protein maintains structural stability in vitro."
     else:
-        summary += f"An instability index of {instability:.1f} suggests limited intrinsic stability in vitro, indicating it may be prone to rapid degradation. "
+        bio += f"An instability index of {instability:.1f} suggests limited intrinsic stability in vitro, indicating it may be prone to rapid degradation."
         
+    # 3. Structural Assessment
+    struct_str = ""
     if afdb_data and afdb_data.get("plddt"):
         plddt = afdb_data["plddt"]
         conf = plddt.get("global", 0)
         vlow = plddt.get("vlow", 0)
         
         if conf > 80:
-            summary += f"AlphaFold confidence scores (average pLDDT = {conf:.1f}) indicate a highly reliable tertiary structure with a predominantly ordered conformation. "
+            struct_str += f"AlphaFold confidence scores (average pLDDT = {conf:.1f}) indicate a highly reliable tertiary structure with a predominantly ordered conformation. "
         elif conf > 60:
-            summary += f"AlphaFold predicts the structure with moderate confidence (average pLDDT = {conf:.1f}), reflecting potential conformational flexibility in certain domains. "
+            struct_str += f"AlphaFold predicts the structure with moderate confidence (average pLDDT = {conf:.1f}), reflecting potential conformational flexibility in certain domains. "
         else:
-            summary += f"The low overall AlphaFold confidence (average pLDDT = {conf:.1f}) strongly implies a high degree of intrinsic disorder or a lack of stable tertiary structure in isolation. "
+            struct_str += f"The low overall AlphaFold confidence (average pLDDT = {conf:.1f}) strongly implies a high degree of intrinsic disorder or a lack of stable tertiary structure in isolation. "
             
         if vlow > 0.2:
-            summary += f"Importantly, a substantial portion ({(vlow*100):.1f}%) of the sequence is predicted with very low confidence, corresponding to putative intrinsically disordered regions (IDRs). "
+            struct_str += f"Importantly, a substantial portion ({(vlow*100):.1f}%) of the sequence is predicted with very low confidence, corresponding to putative intrinsically disordered regions (IDRs). "
             
     if afdb_data and afdb_data.get("pae"):
         domains = afdb_data["pae"].get("domains", [])
         if len(domains) > 1:
-            summary += f"Domain analysis based on Predicted Aligned Error (PAE) supports a multi-domain structural organization comprising {len(domains)} distinct rigid bodies."
+            struct_str += f"Domain analysis based on Predicted Aligned Error (PAE) supports a multi-domain structural organization comprising {len(domains)} distinct rigid bodies."
         elif len(domains) == 1:
-            summary += "Domain analysis based on Predicted Aligned Error (PAE) supports a compact, single-domain structural organization."
+            struct_str += "Domain analysis based on Predicted Aligned Error (PAE) supports a compact, single-domain structural organization."
             
-    return summary.strip()
+    if not struct_str:
+        struct_str = "No structural prediction data is available for this sequence."
+        
+    return {
+        "overview": overview.strip(),
+        "biological": bio.strip(),
+        "structural": struct_str.strip()
+    }
