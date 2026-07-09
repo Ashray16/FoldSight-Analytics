@@ -10,6 +10,9 @@ import DomainVisualizer from './components/DomainVisualizer';
 import InteractiveSequence from './components/InteractiveSequence';
 import ComparisonMode from './components/ComparisonMode';
 import PDFExport from './components/PDFExport';
+import StatusBadge from './components/StatusBadge';
+import ConfidenceGauge from './components/ConfidenceGauge';
+import KeyInsights from './components/KeyInsights';
 import './index.css';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend, Filler);
@@ -491,10 +494,15 @@ export default function App() {
         <header className="top-bar">
           <div style={{display: 'flex', alignItems: 'center', gap: '16px'}}>
             <h2 className="text-headline-md">{results?.protein_name || 'Protein Dashboard'}</h2>
-            <div className="divider" style={{height: '16px'}}></div>
-            <span style={{fontSize: '12px', color: 'var(--on-surface-variant)', background: 'var(--surface-container-high)', padding: '4px 8px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.05)'}}>
-              {results?.uniprot_id ? `Target ID: ${results.uniprot_id}` : 'No Target Selected'}
-            </span>
+            {results && (
+              <>
+                <div className="divider" style={{height: '16px'}}></div>
+                <span className="text-sm font-mono text-slate-400 bg-slate-800/50 px-2 py-1 rounded">{results.uniprot_id}</span>
+                <span className="text-sm text-slate-400 bg-slate-800/50 px-2 py-1 rounded">{results.properties.length} aa</span>
+                <StatusBadge status={results.properties.stability} />
+                <span className="text-sm text-slate-300 font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-1 rounded-full">{results.properties.classification}</span>
+              </>
+            )}
           </div>
           <div style={{display: 'flex', gap: '8px'}}>
             {results && (
@@ -540,6 +548,18 @@ export default function App() {
               <>
                 <AIInterpretation summary={results?.scientific_summary} />
                 
+                {/* Top Row: Insights & Gauge */}
+                {results && (
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                    <div className="lg:col-span-8">
+                      <KeyInsights properties={results.properties} alphafold={results.alphafold} />
+                    </div>
+                    <div className="lg:col-span-4 bg-[#0f172a] rounded-xl border border-slate-800 flex items-center justify-center">
+                      <ConfidenceGauge score={results.alphafold?.plddt?.global} />
+                    </div>
+                  </div>
+                )}
+
                 {/* Stats Grid */}
                 {results && (
                   <div className="grid-2" style={{gridTemplateColumns: 'repeat(4, 1fr)'}}>
@@ -566,12 +586,8 @@ export default function App() {
                   </div>
                 )}
 
-                {results && <StabilityReport properties={results.properties} />}
-                
-                {results && <DomainVisualizer domains={results.alphafold?.pae?.domains} sequenceLength={results.properties?.length} />}
-
-                {/* 3D Viewer */}
-                <section className="glass-panel viewer-container">
+                {/* 3D Viewer - Expanded Width */}
+                <section className="glass-panel viewer-container w-full" style={{ height: '500px' }}>
                   <div className="viewer-overlay">
                     {results && (
                       <div className="status-badge">
@@ -595,6 +611,10 @@ export default function App() {
                     </div>
                   )}
                 </section>
+
+                {results && <StabilityReport properties={results.properties} />}
+                
+                {results && <DomainVisualizer domains={results.alphafold?.pae?.domains} sequenceLength={results.properties?.length} />}
 
                 {/* Charts */}
                 {renderCharts()}
