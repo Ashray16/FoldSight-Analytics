@@ -33,6 +33,8 @@ class HydroRequest(BaseModel):
 
 @app.post("/api/hydrophobicity")
 @app.post("/hydrophobicity")
+@app.post("/api/index.py/hydrophobicity")
+@app.post("/api/index/hydrophobicity")
 def calculate_hydrophobicity(request: Request, req: HydroRequest):
     if not req.sequence:
         raise HTTPException(status_code=400, detail="Empty sequence")
@@ -175,6 +177,8 @@ def analyze_pae(pae_data):
 
 @app.post("/api/analyze")
 @app.post("/analyze")
+@app.post("/api/index.py")
+@app.post("/api/index")
 def analyze_protein(request: Request, req: AnalyzeRequest):
     sequence = ""
     uniprot_id = req.uniprot_id
