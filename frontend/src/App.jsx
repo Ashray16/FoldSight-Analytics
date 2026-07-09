@@ -262,21 +262,55 @@ export default function App() {
   
   const exportCSV = () => {
     if (!results) return;
-    let csv = "Metric,Value\n";
-    csv += `Molecular Weight,${results.properties.molecular_weight}\n`;
-    csv += `Isoelectric Point,${results.properties.pi}\n`;
-    csv += `GRAVY Score,${results.properties.gravy}\n`;
-    csv += `Classification,${results.properties.classification}\n`;
-    csv += `Helix %,${(results.secondary_structure.helix*100).toFixed(1)}\n`;
-    csv += `Turn %,${(results.secondary_structure.turn*100).toFixed(1)}\n`;
-    csv += `Sheet %,${(results.secondary_structure.sheet*100).toFixed(1)}\n`;
+    const safeNum = (num, decimals = 2) => num != null ? Number(num).toFixed(decimals) : 'N/A';
     
-    if (results.alphafold?.plddt) {
-      csv += `AlphaFold pLDDT,${results.alphafold.plddt.global}\n`;
-      csv += `AlphaFold Conclusion,"${results.alphafold.plddt.conclusion}"\n`;
+    let csv = "Category,Metric,Value\n";
+    
+    // Identity
+    csv += `Identity,Protein Name,"${results.protein_name || 'Unknown'}"\n`;
+    csv += `Identity,Identifier,"${results.uniprot_id || 'Custom Sequence'}"\n`;
+    csv += `Identity,Sequence Length,${results.properties?.length || results.sequence?.length || 0}\n`;
+    
+    // Physicochemical Properties
+    if (results.properties) {
+      csv += `Physicochemical,Molecular Weight (kDa),${results.properties.molecular_weight ? safeNum(results.properties.molecular_weight / 1000, 2) : 'N/A'}\n`;
+      csv += `Physicochemical,Isoelectric Point (pI),${safeNum(results.properties.pi)}\n`;
+      csv += `Physicochemical,Instability Index,${safeNum(results.properties.instability_index, 1)}\n`;
+      csv += `Physicochemical,Stability,"${results.properties.stability || 'N/A'}"\n`;
+      csv += `Physicochemical,Aliphatic Index,${safeNum(results.properties.aliphatic_index, 1)}\n`;
+      csv += `Physicochemical,GRAVY Score,${safeNum(results.properties.gravy, 3)}\n`;
+      csv += `Physicochemical,Solubility,"${results.properties.solubility || 'N/A'}"\n`;
+      csv += `Physicochemical,Extinction Coefficient,"${results.properties.extinction_coef_reduced || 'N/A'}"\n`;
+      csv += `Physicochemical,In Vitro Half-Life,"${results.properties.half_life || 'N/A'}"\n`;
+    }
+
+    if (results.secondary_structure) {
+      csv += `Secondary Structure,Helix %,${safeNum(results.secondary_structure.helix * 100, 1)}\n`;
+      csv += `Secondary Structure,Turn %,${safeNum(results.secondary_structure.turn * 100, 1)}\n`;
+      csv += `Secondary Structure,Sheet %,${safeNum(results.secondary_structure.sheet * 100, 1)}\n`;
     }
     
-    const blob = new Blob([csv], { type: 'text/csv' });
+    // AlphaFold & Architecture
+    if (results.alphafold) {
+      csv += `Structure,AlphaFold Global pLDDT (%),${safeNum(results.alphafold.plddt?.global, 1)}\n`;
+      const domains = results.alphafold.pae?.domains || [];
+      csv += `Structure,Rigid Domains Count,${domains.length}\n`;
+      if (domains.length > 0) {
+        const domainList = domains.map((d, i) => `D${i+1}: ${d[0]}-${d[1]}`).join(' | ');
+        csv += `Structure,Domain Boundaries,"${domainList}"\n`;
+      }
+    }
+    
+    // Scientific Summary
+    if (results.scientific_summary) {
+      const sum = results.scientific_summary;
+      const overview = typeof sum === 'object' ? sum.overview : sum;
+      if (overview) {
+        csv += `Interpretation,Overview,"${overview.replace(/"/g, '""')}"\n`;
+      }
+    }
+    
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.setAttribute('hidden', '');
@@ -518,9 +552,11 @@ export default function App() {
             <button className="btn-outline !text-sm !py-1.5" onClick={exportCSV} disabled={!results}>
               <span className="material-symbols-outlined text-[16px] mr-1.5">download</span> CSV
             </button>
-            <div className="scale-90 origin-left">
-              <PDFExport results={results} filename={`${results?.uniprot_id || 'protein'}_report.pdf`} />
-            </div>
+            <PDFExport 
+              results={results} 
+              filename={`${results?.uniprot_id || 'protein'}_report.pdf`}
+              viewerInstance={viewerInstance}
+            />
           </div>
         </header>
 
