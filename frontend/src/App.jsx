@@ -488,34 +488,39 @@ export default function App() {
 
       {/* Main Content */}
       <div className="main-content">
-        <header className="top-bar">
-          <div style={{display: 'flex', alignItems: 'center', gap: '16px'}}>
-            <h2 className="text-headline-md">{results?.protein_name || 'Protein Dashboard'}</h2>
+        <header className="top-bar !h-auto !py-4 flex flex-col xl:flex-row gap-4 xl:gap-8 items-start xl:items-center">
+          <div className="flex flex-col gap-1.5 w-full xl:w-auto">
+            <h2 className="text-xl font-bold text-slate-100 truncate w-full max-w-full xl:max-w-[500px]" title={results?.protein_name || 'Protein Dashboard'}>
+              {results?.protein_name || 'Protein Dashboard'}
+            </h2>
             {results && (
-              <>
-                <div className="divider" style={{height: '16px'}}></div>
-                <span className="text-sm font-mono text-slate-400 bg-slate-800/50 px-2 py-1 rounded">{results.uniprot_id}</span>
-                <span className="text-sm text-slate-400 bg-slate-800/50 px-2 py-1 rounded">{results.properties.length} aa</span>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs font-mono text-slate-400 bg-slate-800/80 px-2 py-1 rounded">{results.uniprot_id}</span>
+                <span className="text-xs text-slate-400 bg-slate-800/80 px-2 py-1 rounded">{results.properties.length} aa</span>
                 <StatusBadge status={results.properties.stability} />
-                <span className="text-sm text-slate-300 font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-1 rounded-full">{results.properties.classification}</span>
-              </>
+                <span className="text-xs text-blue-400 font-medium bg-blue-500/10 border border-blue-500/20 px-2 py-1 rounded-full">
+                  {results.properties.classification}
+                </span>
+              </div>
             )}
           </div>
-          <div style={{display: 'flex', gap: '8px'}}>
+          <div className="flex flex-wrap gap-2 xl:ml-auto">
             {results && (
               <>
-                <button className="btn-outline" onClick={() => setShowScientific(true)}>
-                  <span className="material-symbols-outlined" style={{fontSize: '16px'}}>science</span> Interpretation
+                <button className="btn-outline !text-sm !py-1.5" onClick={() => setShowScientific(true)}>
+                  <span className="material-symbols-outlined text-[16px] mr-1.5">science</span> Interpretation
                 </button>
-                <button className="btn-outline" onClick={() => setShowCompare(true)}>
-                  <span className="material-symbols-outlined" style={{fontSize: '16px'}}>compare_arrows</span> Compare
+                <button className="btn-outline !text-sm !py-1.5" onClick={() => setShowCompare(true)}>
+                  <span className="material-symbols-outlined text-[16px] mr-1.5">compare_arrows</span> Compare
                 </button>
               </>
             )}
-            <button className="btn-outline" onClick={exportCSV} disabled={!results}>
-              <span className="material-symbols-outlined" style={{fontSize: '16px'}}>download</span> CSV
+            <button className="btn-outline !text-sm !py-1.5" onClick={exportCSV} disabled={!results}>
+              <span className="material-symbols-outlined text-[16px] mr-1.5">download</span> CSV
             </button>
-            <PDFExport targetRef={dashboardRef} filename={`${results?.uniprot_id || 'protein'}_report.pdf`} />
+            <div className="scale-90 origin-left">
+              <PDFExport targetRef={dashboardRef} filename={`${results?.uniprot_id || 'protein'}_report.pdf`} />
+            </div>
           </div>
         </header>
 
