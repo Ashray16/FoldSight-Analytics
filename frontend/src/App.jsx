@@ -519,7 +519,7 @@ export default function App() {
               <span className="material-symbols-outlined text-[16px] mr-1.5">download</span> CSV
             </button>
             <div className="scale-90 origin-left">
-              <PDFExport targetRef={dashboardRef} filename={`${results?.uniprot_id || 'protein'}_report.pdf`} />
+              <PDFExport results={results} filename={`${results?.uniprot_id || 'protein'}_report.pdf`} />
             </div>
           </div>
         </header>
