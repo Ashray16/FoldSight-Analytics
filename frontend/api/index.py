@@ -6,6 +6,8 @@ from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
 from Bio.SeqUtils.ProtParam import ProteinAnalysis
 import requests
+import sys
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from ai_engine import get_half_life, predict_solubility, generate_scientific_summary
 
 load_dotenv()
