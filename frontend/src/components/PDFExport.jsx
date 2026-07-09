@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Download, Loader2 } from 'lucide-react';
 import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 export default function PDFExport({ results, filename }) {
   const [isExporting, setIsExporting] = useState(false);
@@ -36,7 +36,9 @@ export default function PDFExport({ results, filename }) {
       doc.setTextColor(71, 85, 105);
       doc.text(`Name: ${results.protein_name || 'Unknown'}`, 14, 52);
       doc.text(`Identifier: ${results.uniprot_id || 'Custom Sequence'}`, 14, 58);
-      doc.text(`Sequence Length: ${results.properties?.length || results.sequence?.length || 0} AA`, 14, 64);
+      
+      const seqLen = results.properties?.length || results.sequence?.length || 0;
+      doc.text(`Sequence Length: ${seqLen} AA`, 14, 64);
 
       // Scientific Interpretation
       let currentY = 76;
@@ -51,9 +53,9 @@ export default function PDFExport({ results, filename }) {
         
         const sum = results.scientific_summary;
         const sections = [
-          { title: "Overview", text: typeof sum === 'object' ? sum.overview : sum },
-          { title: "Structural Assessment", text: typeof sum === 'object' ? sum.structural : '' },
-          { title: "Biological Interpretation", text: typeof sum === 'object' ? sum.biological : '' }
+          { title: "Overview", text: typeof sum === 'object' ? (sum.overview || '') : (sum || '') },
+          { title: "Structural Assessment", text: typeof sum === 'object' ? (sum.structural || '') : '' },
+          { title: "Biological Interpretation", text: typeof sum === 'object' ? (sum.biological || '') : '' }
         ];
 
         sections.forEach(sec => {
@@ -61,7 +63,7 @@ export default function PDFExport({ results, filename }) {
             doc.setFont(undefined, 'bold');
             doc.text(sec.title + ":", 14, currentY);
             doc.setFont(undefined, 'normal');
-            const lines = doc.splitTextToSize(sec.text, pageWidth - 28);
+            const lines = doc.splitTextToSize(sec.text.toString(), pageWidth - 28);
             currentY += 5;
             doc.text(lines, 14, currentY);
             currentY += (lines.length * 5) + 4;
@@ -76,19 +78,22 @@ export default function PDFExport({ results, filename }) {
         doc.setTextColor(33, 43, 54);
         doc.text("Physicochemical Properties", 14, currentY);
         
+        const safeNum = (num, decimals = 2) => num != null ? Number(num).toFixed(decimals) : 'N/A';
+        const mw = results.properties.molecular_weight ? safeNum(results.properties.molecular_weight / 1000, 2) + ' kDa' : 'N/A';
+
         const propsData = [
-          ['Molecular Weight', `${(results.properties.molecular_weight / 1000).toFixed(2)} kDa`],
-          ['Isoelectric Point (pI)', results.properties.pi?.toFixed(2)],
-          ['Instability Index', results.properties.instability_index?.toFixed(1) || 'N/A'],
+          ['Molecular Weight', mw],
+          ['Isoelectric Point (pI)', safeNum(results.properties.pi)],
+          ['Instability Index', safeNum(results.properties.instability_index, 1)],
           ['Stability', results.properties.stability || 'N/A'],
-          ['Aliphatic Index', results.properties.aliphatic_index?.toFixed(1) || 'N/A'],
-          ['GRAVY Score', results.properties.gravy?.toFixed(3) || 'N/A'],
+          ['Aliphatic Index', safeNum(results.properties.aliphatic_index, 1)],
+          ['GRAVY Score', safeNum(results.properties.gravy, 3)],
           ['Solubility', results.properties.solubility || 'N/A'],
           ['Extinction Coefficient', results.properties.extinction_coef_reduced || 'N/A'],
           ['In Vitro Half-Life', results.properties.half_life || 'N/A']
         ];
 
-        doc.autoTable({
+        autoTable(doc, {
           startY: currentY + 5,
           head: [['Metric', 'Value']],
           body: propsData,
@@ -101,6 +106,12 @@ export default function PDFExport({ results, filename }) {
       
       // Structural Architecture
       if (results.alphafold) {
+        // Prevent writing off the bottom of the page
+        if (currentY > 250) {
+          doc.addPage();
+          currentY = 20;
+        }
+        
         doc.setFontSize(14);
         doc.setTextColor(33, 43, 54);
         doc.text("Structural Predictions (AlphaFold)", 14, currentY);
@@ -108,7 +119,8 @@ export default function PDFExport({ results, filename }) {
         
         doc.setFontSize(10);
         doc.setTextColor(71, 85, 105);
-        doc.text(`Global pLDDT (Confidence): ${results.alphafold.plddt?.global?.toFixed(1) || 0}%`, 14, currentY);
+        const plddtGlobal = results.alphafold.plddt?.global;
+        doc.text(`Global pLDDT (Confidence): ${plddtGlobal != null ? Number(plddtGlobal).toFixed(1) : '0.0'}%`, 14, currentY);
         currentY += 6;
         
         const domains = results.alphafold.pae?.domains || [];
@@ -123,7 +135,7 @@ export default function PDFExport({ results, filename }) {
 
       doc.save(filename || 'protein_analysis_report.pdf');
     } catch (error) {
-      console.error("PDF Export failed", error);
+      console.error("PDF Export failed:", error);
       alert("Failed to export PDF report. Check console for details.");
     } finally {
       setIsExporting(false);
@@ -134,7 +146,7 @@ export default function PDFExport({ results, filename }) {
     <button 
       onClick={handleExport}
       disabled={isExporting || !results}
-      className={`action-button secondary flex items-center gap-2 ${!results ? 'opacity-50 cursor-not-allowed' : ''}`}
+      className={`btn-outline !text-sm !py-1.5 flex items-center gap-2 ${!results ? 'opacity-50 cursor-not-allowed' : ''}`}
       title="Export Publication-Quality PDF"
     >
       {isExporting ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
