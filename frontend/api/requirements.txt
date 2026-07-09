@@ -1,0 +1,6 @@
+fastapi
+uvicorn
+biopython
+requests
+pydantic
+python-dotenv
