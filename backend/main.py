@@ -6,18 +6,10 @@ from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
 from Bio.SeqUtils.ProtParam import ProteinAnalysis
 import requests
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
-from slowapi.errors import RateLimitExceeded
 
 load_dotenv()
 
 app = FastAPI()
-
-# Rate limiting
-limiter = Limiter(key_func=get_remote_address)
-app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 allowed_origins_env = os.environ.get("ALLOWED_ORIGINS")
 allowed_origins = allowed_origins_env.split(",") if allowed_origins_env else ["http://localhost:5173"]
@@ -40,7 +32,6 @@ class HydroRequest(BaseModel):
     window_size: int = Field(9, ge=3, le=41)
 
 @app.post("/api/hydrophobicity")
-@limiter.limit("5/15minute")
 def calculate_hydrophobicity(request: Request, req: HydroRequest):
     if not req.sequence:
         raise HTTPException(status_code=400, detail="Empty sequence")
@@ -182,7 +173,6 @@ def analyze_pae(pae_data):
     }
 
 @app.post("/api/analyze")
-@limiter.limit("5/15minute")
 def analyze_protein(request: Request, req: AnalyzeRequest):
     sequence = ""
     uniprot_id = req.uniprot_id
