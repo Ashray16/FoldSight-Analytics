@@ -229,7 +229,11 @@ export default function App() {
       setActiveTab('molecular');
       setSelectedDomain(null);
     } catch (err) {
-      setError(err.response?.data?.detail || 'An error occurred during analysis');
+      if (err.response) {
+        setError(`Error ${err.response.status}: ${JSON.stringify(err.response.data)}`);
+      } else {
+        setError(`Network Error: ${err.message}`);
+      }
     } finally {
       setLoading(false);
     }
