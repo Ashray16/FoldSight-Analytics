@@ -225,15 +225,52 @@ def analyze_protein(request: Request, req: AnalyzeRequest):
 
     try:
         analysis = ProteinAnalysis(sequence)
+        length = len(sequence)
         molecular_weight = analysis.molecular_weight()
         pi = analysis.isoelectric_point()
         gravy = analysis.gravy()
         sec_struct = analysis.secondary_structure_fraction()
         aa_counts = analysis.count_amino_acids()
+        
+        # Advanced Metrics
+        instability = analysis.instability_index()
+        stability_str = "Stable" if instability < 40 else "Unstable"
+        
+        # Extinction coefficient (returns tuple: (reduced, oxidized))
+        extinction_coef = analysis.molar_extinction_coefficient()
+        
+        # Aliphatic Index
+        # Formula: Mole% Ala + a * Mole% Val + b * (Mole% Ile + Mole% Leu)
+        # a = 2.9, b = 3.9
+        mole_pct = {aa: (count / length) * 100 for aa, count in aa_counts.items()}
+        aliphatic_index = mole_pct.get('A', 0) + 2.9 * mole_pct.get('V', 0) + 3.9 * (mole_pct.get('I', 0) + mole_pct.get('L', 0))
+        
+        # Half life (in vitro, mammalian reticulocytes) based on N-terminal residue
+        n_term = sequence[0]
+        half_life_dict = {
+            'A': '4.4 hours', 'C': '1.2 hours', 'D': '1.1 hours', 'E': '1.0 hours',
+            'F': '1.1 hours', 'G': '30 hours', 'H': '3.5 hours', 'I': '20 hours',
+            'K': '1.3 hours', 'L': '5.5 hours', 'M': '30 hours', 'N': '1.4 hours',
+            'P': '>10 hours', 'Q': '0.8 hours', 'R': '1.0 hours', 'S': '1.9 hours',
+            'T': '7.2 hours', 'V': '100 hours', 'W': '2.8 hours', 'Y': '2.8 hours'
+        }
+        half_life = half_life_dict.get(n_term, 'Unknown')
+        
+        # Solubility
+        solubility = "High (Globular)" if gravy < 0 else "Low (Membrane/Hydrophobic)"
+        
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error analyzing sequence: {str(e)}")
         
     hydro_plot = get_hydrophobicity_plot(sequence, req.window_size)
+    
+    # Generate Scientific Summary text
+    overview = f"The analyzed protein consists of {length} amino acid residues with a molecular weight of {molecular_weight / 1000:.1f} kDa and an isoelectric point (pI) of {pi:.2f}."
+    
+    struct_str = "High" if (plddt_result and plddt_result["global"] >= 80) else "Moderate/Low"
+    structural = f"AlphaFold predicts this structure with {struct_str} confidence (pLDDT: {plddt_result['global']:.1f}). " + (pae_data_result["conclusion"] if pae_data_result else "No domain architecture information is available.")
+    
+    biological = f"The protein is classified as {solubility} with a GRAVY score of {gravy:.3f}. It is predicted to be {stability_str.lower()} in vitro (Instability Index: {instability:.1f}), with an aliphatic index of {aliphatic_index:.1f} suggesting " + ("high" if aliphatic_index > 80 else "moderate/low") + " thermostability."
 
     return {
         "sequence": sequence,
@@ -241,10 +278,18 @@ def analyze_protein(request: Request, req: AnalyzeRequest):
         "protein_name": protein_name,
         "cif_url": cif_url,
         "properties": {
+            "length": length,
             "molecular_weight": molecular_weight,
             "pi": pi,
             "gravy": gravy,
-            "classification": "Hydrophobic (Membrane)" if gravy > 0 else "Hydrophilic (Globular)"
+            "classification": "Hydrophobic (Membrane)" if gravy > 0 else "Hydrophilic (Globular)",
+            "instability_index": instability,
+            "stability": stability_str,
+            "aliphatic_index": aliphatic_index,
+            "half_life": half_life,
+            "solubility": solubility,
+            "extinction_coef_reduced": extinction_coef[0],
+            "extinction_coef_oxidized": extinction_coef[1]
         },
         "secondary_structure": {
             "helix": sec_struct[0],
@@ -256,5 +301,10 @@ def analyze_protein(request: Request, req: AnalyzeRequest):
         "alphafold": {
             "plddt": plddt_result,
             "pae": pae_data_result
+        },
+        "scientific_summary": {
+            "overview": overview,
+            "structural": structural,
+            "biological": biological
         }
     }

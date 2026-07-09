@@ -689,7 +689,14 @@ export default function App() {
       )}
       
       {showScientific && results && (
-        <ScientificDrawer results={results} onClose={() => setShowScientific(false)} />
+        <ScientificDrawer 
+          results={results} 
+          onClose={() => setShowScientific(false)} 
+          onDomainSelect={(dom) => {
+            setSelectedDomain(dom);
+            setShowScientific(false);
+          }}
+        />
       )}
     </div>
   );
