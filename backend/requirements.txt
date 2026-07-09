@@ -3,5 +3,4 @@ uvicorn
 biopython
 requests
 pydantic
-slowapi
 python-dotenv
