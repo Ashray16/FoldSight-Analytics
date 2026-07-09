@@ -29,9 +29,9 @@ const Logo = () => (
   </svg>
 );
 
-const Viewer3D = ({ cifUrl, sequence, styleMode, highlightDomain }) => {
+const Viewer3D = ({ cifUrl, sequence, styleMode, highlightDomain, onViewerReady }) => {
   const viewerRef = useRef(null);
-  const [viewerInstance, setViewerInstance] = useState(null);
+  const [localViewerInstance, setLocalViewerInstance] = useState(null);
   
   const applyStyle = (viewer, mode, highlight) => {
     viewer.removeAllSurfaces();
@@ -101,7 +101,8 @@ const Viewer3D = ({ cifUrl, sequence, styleMode, highlightDomain }) => {
     const viewer = window.$3Dmol.createViewer(viewerRef.current, {
       backgroundColor: 'transparent'
     });
-    setViewerInstance(viewer);
+    setLocalViewerInstance(viewer);
+    if (onViewerReady) onViewerReady(viewer);
     
     if (cifUrl) {
       axios.get(cifUrl).then(res => {
@@ -113,11 +114,11 @@ const Viewer3D = ({ cifUrl, sequence, styleMode, highlightDomain }) => {
   }, [cifUrl, sequence]);
 
   useEffect(() => {
-    if (viewerInstance) {
-      applyStyle(viewerInstance, styleMode, highlightDomain);
-      viewerInstance.render();
+    if (localViewerInstance) {
+      applyStyle(localViewerInstance, styleMode, highlightDomain);
+      localViewerInstance.render();
     }
-  }, [styleMode, highlightDomain, viewerInstance]);
+  }, [styleMode, highlightDomain, localViewerInstance]);
 
   return (
     <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -135,6 +136,7 @@ const Viewer3D = ({ cifUrl, sequence, styleMode, highlightDomain }) => {
 export default function App() {
   const [activeTab, setActiveTab] = useState('molecular'); // 'molecular' | 'sequence'
   const [selectedDomain, setSelectedDomain] = useState(null);
+  const [viewerInstance, setViewerInstance] = useState(null);
   
   const [inputType, setInputType] = useState('uniprot');
   const [inputValue, setInputValue] = useState('');
@@ -627,7 +629,7 @@ export default function App() {
                   </div>
                   
                   <div style={{flex: 1, backgroundColor: '#020617', position: 'relative'}}>
-                    <Viewer3D cifUrl={results?.cif_url} sequence={results?.sequence} styleMode={styleMode} highlightDomain={selectedDomain} />
+                    <Viewer3D cifUrl={results?.cif_url} sequence={results?.sequence} styleMode={styleMode} highlightDomain={selectedDomain} onViewerReady={setViewerInstance} />
                   </div>
                   
                   {results && (
