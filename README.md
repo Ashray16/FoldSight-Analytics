@@ -65,4 +65,4 @@ https://fold-sight-analytics.vercel.app
 
 ## Author
 
-Ashray Gupta , Sanjeev
+Ashray Gupta , Sanjeev Kumar
